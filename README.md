@@ -242,6 +242,37 @@ Das Demo erzeugt:
 - `Shortcut.set_icon(color, glyph)` erlaubt es, Icon-Farbe und Glyph-Nummer manuell zu setzen.
 - Nicht jede von Apple intern verwendete Parameterstruktur ist offiziell dokumentiert. Bei exotischen Aktionen kann Feintuning noetig sein.
 
+## Automatisierung mit AppleScript
+
+Vollautomatisch signierte Importe gibt es nicht, aber du kannst die Erstellung in der Kurzbefehle-App teilweise per UI-Scripting anstoßen.
+
+Dateien:
+
+- `automation/create_shortcut_stub.applescript`
+- `automation/run_create_shortcut.sh`
+
+### Voraussetzungen
+
+- macOS mit installierter Kurzbefehle-App
+- Bedienungshilfen-Zugriff fuer Terminal (oder die App, die `osascript` startet):
+	System Settings > Privacy & Security > Accessibility
+
+### Aufruf
+
+```bash
+chmod +x automation/run_create_shortcut.sh
+./automation/run_create_shortcut.sh "Clipboard Helfer (Auto)"
+```
+
+Was das Script macht:
+
+1. Oeffnet die Kurzbefehle-App
+2. Legt per `Cmd+N` einen neuen Kurzbefehl an
+3. Versucht den Namen zu setzen
+4. Fuegt best-effort eine `Text`-Aktion als Stub ein
+
+Hinweis: UI-Automation ist fragil und kann je nach macOS-Version, Sprache oder App-Layout angepasst werden muessen.
+
 ## Status
 
 Das Paket ist lauffaehig und der aktuelle Stand wurde lokal validiert:
