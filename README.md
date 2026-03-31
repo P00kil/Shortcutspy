@@ -2,6 +2,8 @@
 
 **Apple-Kurzbefehle mit Python programmieren, signieren und installieren.**
 
+> **English?** → [README_EN.md](README_EN.md)
+
 ShortcutsPy erzeugt aus Python-Code native `.shortcut`-Dateien, signiert sie automatisch ueber das macOS-CLI und oeffnet den Import-Dialog — alles mit einem einzigen Funktionsaufruf.
 
 ```python
@@ -335,7 +337,8 @@ Nicht abgedeckte Aktionen: `RawAction(identifier, ...)` oder `AppIntentAction(..
 ```
 ShortcutsPy/
 ├── pyproject.toml                        # Paket-Konfiguration
-├── README.md
+├── README.md                             # Dokumentation (Deutsch)
+├── README_EN.md                          # Documentation (English)
 ├── shortcutspy/
 │   ├── __init__.py                       # Public API
 │   ├── actions.py                        # 150+ Action-Klassen
