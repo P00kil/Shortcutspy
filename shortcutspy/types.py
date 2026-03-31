@@ -85,3 +85,18 @@ class Variable:
                 "WFSerializationType": "WFTextTokenString",
             },
         }
+
+    def as_text_token(self) -> dict:
+        """Return a token string used inside text parameters."""
+        return {
+            "Value": {
+                "string": "\ufffc",
+                "attachmentsByRange": {
+                    "{0, 1}": {
+                        "Type": "Variable",
+                        "VariableName": self.name,
+                    }
+                },
+            },
+            "WFSerializationType": "WFTextTokenString",
+        }

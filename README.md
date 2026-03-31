@@ -43,8 +43,12 @@ ShortcutsPy/
 │   ├── flow.py
 │   ├── shortcut.py
 │   └── types.py
-└── examples/
-	└── demo.py
+├── examples/
+│   ├── demo.py
+│   └── clipboard_helfer.py
+└── automation/
+    ├── create_shortcut_stub.applescript
+    └── run_create_shortcut.sh
 ```
 
 ## Kernideen

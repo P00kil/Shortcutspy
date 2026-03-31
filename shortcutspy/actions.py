@@ -1546,6 +1546,8 @@ def _resolve_text(value: Any) -> Any:
         return value.output.as_text_token()
     if isinstance(value, CurrentDate):
         return value.as_text_token()
+    if isinstance(value, Variable):
+        return value.as_text_token()
     return value
 
 
