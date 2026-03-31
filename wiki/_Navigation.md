@@ -5,20 +5,11 @@ Das ist die automatische Navigations-Datei fuer das GitHub Wiki.
 ## Navigation
 
 - **[Home](Home)** — Wiki-Startseite
-- **Getting Started**
+- **Einstieg**
   - [Installation & Setup](Installation-&-Setup)
   - [Getting Started: Erstes Shortcut](Getting-Started)
   - [Core Concepts](Core-Concepts)
-- **Tutorials**
-  - [Building Menus](Building-Menus)
-  - [Working with Variables](Working-with-Variables)
-  - [Making API Calls](Making-API-Calls)
-- **Advanced**
-  - [Advanced Patterns](Advanced-Patterns)
-  - [Custom Actions](Custom-Actions)
-  - [Debugging](Debugging)
-- **Reference**
-  - [API Reference](API-Reference)
+- **Hilfe**
   - [FAQ](FAQ)
   - [Troubleshooting](Troubleshooting)
 

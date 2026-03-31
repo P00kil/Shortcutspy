@@ -18,7 +18,7 @@ Hier sind Antworten auf Fragen, die Nutzer häufig stellen.
 
 ### F: Kann ich existierende Kurzbefehle bearbeiten?
 
-**A:** Nein, ShortcutsPy erstellt immer neue Kurzbefehle von Grund auf. Du kannst bestehende`.shortcut`-Dateien nicht laden und bearbeiten.
+**A:** Nein, ShortcutsPy erstellt immer neue Kurzbefehle von Grund auf. Du kannst bestehende `.shortcut`-Dateien nicht laden und bearbeiten.
 
 ---
 
@@ -73,7 +73,7 @@ If(some_value).then(
 
 ---
 
-### F: Warum brauch ich `install_shortcut` auf einem Mac?
+### F: Warum brauche ich `install_shortcut` auf einem Mac?
 
 **A:** Apple erfordert, dass Kurzbefehle digital signiert sein. Das ist ein Sicherheitsmechanismus. `install_shortcut` macht drei Dinge:
 1. Speichert die `.shortcut`-Datei

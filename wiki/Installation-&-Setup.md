@@ -160,7 +160,7 @@ Wenn fehlerhaft auf M1/M2 Mac, versuche:
 /usr/bin/shortcuts --version
 ```
 
-### Problem: Fehlermedlung beim Import in die Kurzbefehle-App
+### Problem: Fehlermeldung beim Import in die Kurzbefehle-App
 
 **Loesung:**
 - Stelle sicher, dass du mit einer Apple-ID angemeldet bist (Systemeinstellungen → Apple-ID)

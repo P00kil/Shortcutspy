@@ -42,7 +42,7 @@ Das ist wie wenn du in der Kurzbefehle-App den Output einer Aktion in die naechs
 ```
 ┌──────────────┐
 │ Text         │
-│ "Hallo"      ├→ (Pfeil draenhen / Output uebergeben)
+│ "Hallo"      ├→ (Pfeil ziehen / Output uebergeben)
 └──────────────┘
         ↓
 ┌──────────────────────────┐
@@ -188,7 +188,7 @@ So arbeiten die Konzepte zusammen:
 ```
 Shortcut
   ├─ Action 1: Ask(question="?")
-  │   └─ .output → (Benutzeranwort)
+  │   └─ .output → (Benutzerantwort)
   │
   ├─ Action 2: If(.output > 10)
   │   ├─ Then: Text("Gross")
@@ -207,28 +207,26 @@ Wenn der Kurzbefehl ausgefuehrt wird:
 
 ## 8. Chaining (Verkettung)
 
-Du kannst zu viele Output-Referenzen hintereinander verketten:
+Du kannst mehrere Output-Referenzen hintereinander verketten:
 
 ```python
 name = Ask(question="Name?")
-greeting = CombineText(["Hallo ", name.output])
-uppercase = ChangeCase(greeting.output, format="uppercase")
+uppercase = ChangeCase(name.output, case="UPPERCASE")
 result = ShowResult(uppercase.output)
 
-shortcut.add(name, greeting, uppercase, result)
+shortcut.add(name, uppercase, result)
 ```
 
 Ablauf:
 1. Name wird gefragt
-2. "Hallo" + Name werden kombiniert
-3. Das Ergebnis wird in GROSSBUCHSTABEN umgewandelt
-4. Das Endergebnis wird angezeigt
+2. Das Ergebnis wird in GROSSBUCHSTABEN umgewandelt
+3. Das Endergebnis wird angezeigt
 
 ---
 
 ## 9. Reihenfolge ist wichtig
 
-Aktionen werden **in der Reihenfolge** ausgefuehrt, in der sie aeingefuegt werden:
+Aktionen werden **in der Reihenfolge** ausgefuehrt, in der sie eingefuegt werden:
 
 ```python
 # ❌ Falsch
@@ -259,4 +257,4 @@ shortcut.add(
 
 ---
 
-**Naechster Schritt:** Sieh dir praktische Beispiele in den Tutorials an oder tauche tiefer in [Advanced Patterns](Advanced-Patterns) ein.
+**Naechster Schritt:** Sieh dir praktische Beispiele in den Tutorials an oder schau in die [FAQ](FAQ).

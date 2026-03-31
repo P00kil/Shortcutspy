@@ -72,14 +72,14 @@ In der Kurzbefehle-App sieht es so aus:
 
 ---
 
-## Naechster Schritt: Benutzeroingabe
+## Naechster Schritt: Benutzereingabe
 
 Lassen uns den Kurzbefehl interaktiver machen:
 
 ```python
 from shortcutspy import Shortcut, Ask, ShowResult, install_shortcut
 
-shortcut = Shortcut("Persoenliche Begruendung")
+shortcut = Shortcut("Persoenliche Begruessung")
 
 # Benutzer fragen
 name = Ask(question="Wie heisst du?")
@@ -162,7 +162,7 @@ Wenn es immer noch nicht funktioniert, brauchst du macOS Monterey oder neuer.
 Jetzt, da du die Basics verstanden hast:
 
 1. **[Core Concepts](Core-Concepts)** — Lerne ueber Actions und Outputs
-2. **[Building Menus](Building-Menus)** — Erstelle Auswahlmenues
-3. **[Making API Calls](Making-API-Calls)** — Abfrage externe APIs
+2. **[FAQ](FAQ)** — Antworten auf haeufige Fragen
+3. **[Troubleshooting](Troubleshooting)** — Hilfe bei Problemen
 
 Viel Spass!

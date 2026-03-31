@@ -165,7 +165,7 @@ This shortcut couldn't be opened
 2. **Falsche macOS-Version:** Du hast macOS Sierra oder aelter
    - Loesung: Upgrade auf macOS Monterey oder neuer
 
-3. **Datei ist beschaedigt:** Er Shortcut wurde nicht richtig erstellt oder signiert
+3. **Datei ist beschaedigt:** Der Shortcut wurde nicht richtig erstellt oder signiert
    - Loesung: Versuche die Datei zu loeschen und neu zu erstellen
 
 4. **Falsche Signierung:** Die Datei wurde nicht signiert
@@ -276,13 +276,13 @@ shortcut.add(
 
 ## Schnelle Fehler-Checkliste
 
-Wenn something schiefgeht, pruefe:
+Wenn etwas schiefgeht, pruefe:
 
 - [ ] **Ist ShortcutsPy installiert?** → `pip list | grep shortcutspy`
 - [ ] **Sind alle Importe vorhanden?** → `from shortcutspy import ...`
 - [ ] **Ist die Aktion an die richtige Variable zugewiesen?** → `text = Text(...)`
 - [ ] **Werden Aktionen zum Shortcut hinzugefuegt?** → `.add(...)`
-- [ ] **Sind die Namen der Variablen korrekt?** → Kleibuchstaben beachten
+- [ ] **Sind die Namen der Variablen korrekt?** → Kleinbuchstaben beachten
 - [ ] **Werden auf dem Mac die Signierungsvoraussetzungen erfuellt?** → Apple-ID angemeldet?
 - [ ] **Ist der Pfad richtig?** → Verzeichnis existiert und ist beschreibbar?
 
@@ -290,6 +290,6 @@ Wenn something schiefgeht, pruefe:
 
 ## Weitere Hilfe
 
-- **[FAQ](FAQ)** — Haeuufig gestellte Fragen
-- **[GitHub Issues](https://github.com/P00kil/Shortcutspy/issues)** — Bueller melden oder Fragen stellen
+- **[FAQ](FAQ)** — Haeufig gestellte Fragen
+- **[GitHub Issues](https://github.com/P00kil/Shortcutspy/issues)** — Fehler melden oder Fragen stellen
 - **[Core Concepts](Core-Concepts)** — Grundkonzepte nochmal lesen
