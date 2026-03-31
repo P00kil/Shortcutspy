@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import plistlib
+import subprocess
 from pathlib import Path
 
 from .shortcut import Shortcut
@@ -43,3 +44,35 @@ def save_actions_json(shortcut: Shortcut, path: str) -> Path:
         encoding="utf-8",
     )
     return target
+
+
+def sign_shortcut(input_path: str, output_path: str | None = None,
+                  mode: str = "anyone") -> Path:
+    """Sign a .shortcut file using the macOS shortcuts CLI.
+
+    Returns the path to the signed file.
+    Requires macOS with the Shortcuts app installed.
+    """
+    src = Path(input_path)
+    if output_path is None:
+        dst = src.with_stem(src.stem + "_signed")
+    else:
+        dst = Path(output_path)
+    subprocess.run(
+        ["shortcuts", "sign", "-m", mode, "-i", str(src), "-o", str(dst)],
+        check=True, capture_output=True,
+    )
+    return dst
+
+
+def install_shortcut(shortcut: Shortcut, path: str,
+                     mode: str = "anyone") -> Path:
+    """Build, sign, and open a shortcut in the Shortcuts app.
+
+    This is the all-in-one function: it writes the unsigned plist,
+    signs it via the macOS CLI, and opens the signed file for import.
+    """
+    unsigned = save_shortcut(shortcut, path)
+    signed = sign_shortcut(str(unsigned), mode=mode)
+    subprocess.run(["open", str(signed)], check=True)
+    return signed

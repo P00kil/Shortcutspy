@@ -202,10 +202,11 @@ from shortcutspy import *
 Wichtige Gruppen:
 
 - `Shortcut` zum Erzeugen eines kompletten Workflows
-- `Text`, `URL`, `DownloadURL`, `Notification`, `ShowResult` und viele weitere Aktionen aus `actions.py`
+- `Text`, `URL`, `DownloadURL`, `Ask`, `Notification`, `ShowResult` und viele weitere Aktionen aus `actions.py`
 - `If`, `Menu`, `RepeatCount`, `RepeatEach` fuer Kontrollfluss
 - `ActionOutput`, `Variable`, `CurrentDate` fuer Referenzen und Tokens
 - `save_json`, `save_actions_json`, `save_shortcut`, `to_json`, `to_plist` fuer Export
+- `sign_shortcut`, `install_shortcut` fuer Signierung und Import
 
 ## Export
 
@@ -219,7 +220,25 @@ Schreibt nur die Liste der Aktionen. Das ist praktisch zum Debuggen einzelner Wo
 
 ### `save_shortcut(shortcut, path)`
 
-Schreibt eine native Binary-Plist-Datei mit der Endung `.shortcut`. Diese Datei kann auf macOS in der Regel direkt importiert werden.
+Schreibt eine native Binary-Plist-Datei mit der Endung `.shortcut`.
+
+### `sign_shortcut(input_path, output_path=None, mode="anyone")`
+
+Signiert eine `.shortcut`-Datei mit dem macOS `shortcuts`-CLI. Gibt den Pfad zur signierten Datei zurueck.
+
+### `install_shortcut(shortcut, path, mode="anyone")`
+
+All-in-one: Schreibt, signiert und oeffnet den Kurzbefehl direkt in der Kurzbefehle-App.
+
+```python
+from shortcutspy import Shortcut, Text, ShowResult, install_shortcut
+
+shortcut = Shortcut("Mein Kurzbefehl")
+shortcut.add(Text("Hallo"), ShowResult())
+
+install_shortcut(shortcut, "mein_kurzbefehl.shortcut")
+# -> Kurzbefehle-App oeffnet sich mit Import-Dialog
+```
 
 ### `to_json(shortcut)` und `to_plist(shortcut)`
 
@@ -227,16 +246,27 @@ Liefert den Export als String oder Bytes, ohne direkt eine Datei zu schreiben.
 
 ## Demo ausfuehren
 
-Das Beispielprojekt liegt in `examples/demo.py`.
+### Einfaches Demo
 
 ```bash
 PYTHONPATH=. python examples/demo.py
 ```
 
-Das Demo erzeugt:
+### Produktivitaets-Hub (mit automatischem Import)
 
-- `examples/begruessung.json`
-- `examples/begruessung.shortcut`
+```bash
+PYTHONPATH=. python examples/produktivitaets_hub.py
+```
+
+Baut den Kurzbefehl, signiert ihn und oeffnet ihn in der Kurzbefehle-App.
+
+### Shell-Script fuer beliebige Beispiele
+
+```bash
+chmod +x automation/build_and_install.sh
+./automation/build_and_install.sh examples/produktivitaets_hub.py
+./automation/build_and_install.sh examples/clipboard_helfer.py
+```
 
 ## Hinweise
 
@@ -245,37 +275,37 @@ Das Demo erzeugt:
 - Drittanbieter-App-Intents lassen sich ueber `AppIntentAction` beschreiben.
 - `Shortcut.set_icon(color, glyph)` erlaubt es, Icon-Farbe und Glyph-Nummer manuell zu setzen.
 - Nicht jede von Apple intern verwendete Parameterstruktur ist offiziell dokumentiert. Bei exotischen Aktionen kann Feintuning noetig sein.
+- Signierung erfordert macOS mit angemeldeter Apple-ID.
 
-## Automatisierung mit AppleScript
+## Automatisierung
 
-Vollautomatisch signierte Importe gibt es nicht, aber du kannst die Erstellung in der Kurzbefehle-App teilweise per UI-Scripting anstoßen.
+### Empfohlener Weg: sign + open (CLI)
 
-Dateien:
+Das macOS `shortcuts`-CLI kann `.shortcut`-Dateien signieren. Danach lassen sie sich direkt oeffnen und importieren.
+
+```python
+from shortcutspy import install_shortcut
+
+install_shortcut(shortcut, "mein_kurzbefehl.shortcut")
+```
+
+Oder per Shell:
+
+```bash
+shortcuts sign -m anyone -i mein.shortcut -o mein_signed.shortcut
+open mein_signed.shortcut
+```
+
+### Alternativer Weg: AppleScript UI-Scripting
+
+Fuer Faelle ohne CLI-Zugriff gibt es eine AppleScript-basierte Loesung:
 
 - `automation/create_shortcut_stub.applescript`
 - `automation/run_create_shortcut.sh`
 
-### Voraussetzungen
+Voraussetzung: Bedienungshilfen-Zugriff in System Settings > Privacy & Security > Accessibility.
 
-- macOS mit installierter Kurzbefehle-App
-- Bedienungshilfen-Zugriff fuer Terminal (oder die App, die `osascript` startet):
-	System Settings > Privacy & Security > Accessibility
-
-### Aufruf
-
-```bash
-chmod +x automation/run_create_shortcut.sh
-./automation/run_create_shortcut.sh "Clipboard Helfer (Auto)"
-```
-
-Was das Script macht:
-
-1. Oeffnet die Kurzbefehle-App
-2. Legt per `Cmd+N` einen neuen Kurzbefehl an
-3. Versucht den Namen zu setzen
-4. Fuegt best-effort eine `Text`-Aktion als Stub ein
-
-Hinweis: UI-Automation ist fragil und kann je nach macOS-Version, Sprache oder App-Layout angepasst werden muessen.
+Hinweis: UI-Automation ist fragil und kann je nach macOS-Version angepasst werden muessen.
 
 ## Status
 
@@ -284,3 +314,4 @@ Das Paket ist lauffaehig und der aktuelle Stand wurde lokal validiert:
 - Import des Pakets funktioniert
 - Das Demo laeuft ohne Fehler
 - JSON- und `.shortcut`-Export funktionieren
+- Signierung und Import via `install_shortcut()` funktionieren

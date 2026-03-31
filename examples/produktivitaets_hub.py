@@ -28,6 +28,7 @@ from shortcutspy import (
     SetVariable,
     Shortcut,
     ShowResult,
+    install_shortcut,
     save_json,
     save_shortcut,
 )
@@ -144,10 +145,10 @@ def build() -> Shortcut:
 def main() -> None:
     shortcut = build()
     save_json(shortcut, "examples/produktivitaets_hub.json")
-    save_shortcut(shortcut, "examples/produktivitaets_hub.shortcut")
-    print("Shortcut erzeugt:")
-    print("  examples/produktivitaets_hub.json")
-    print("  examples/produktivitaets_hub.shortcut")
+    print("JSON erzeugt: examples/produktivitaets_hub.json")
+
+    signed = install_shortcut(shortcut, "examples/produktivitaets_hub.shortcut")
+    print(f"Signiert und geoeffnet: {signed}")
 
 
 if __name__ == "__main__":

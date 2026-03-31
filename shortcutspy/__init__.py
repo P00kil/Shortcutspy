@@ -1,7 +1,7 @@
 """ShortcutsPy public API."""
 
 from .actions import *
-from .export import save_actions_json, save_json, save_shortcut, to_json, to_plist
+from .export import save_actions_json, save_json, save_shortcut, sign_shortcut, install_shortcut, to_json, to_plist
 from .flow import If, Menu, RepeatCount, RepeatEach
 from .shortcut import Shortcut
 from .types import ActionOutput, CurrentDate, Variable
