@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shortcutspy"
+version = "1.0.0"
+description = "Create Apple Shortcuts files from Python"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Kilian Handy" }
+]
+license = { text = "MIT" }
+keywords = ["shortcuts", "apple-shortcuts", "automation", "plist"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS"
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shortcutspy*"]
