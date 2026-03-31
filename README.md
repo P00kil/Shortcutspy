@@ -1,180 +1,181 @@
 # ShortcutsPy
 
-ShortcutsPy ist ein Python-Framework, mit dem sich Apple-Kurzbefehle per Code erzeugen lassen. Statt Workflows direkt in der Kurzbefehle-App zusammenzuklicken, definierst du Aktionen, Variablen und Kontrollfluss in Python. Das Framework erzeugt daraus JSON oder native `.shortcut`-Dateien.
+**Apple-Kurzbefehle mit Python programmieren, signieren und installieren.**
 
-## Ziel
-
-Die API soll sich so lesen wie der Workflow selbst:
+ShortcutsPy erzeugt aus Python-Code native `.shortcut`-Dateien, signiert sie automatisch ueber das macOS-CLI und oeffnet den Import-Dialog — alles mit einem einzigen Funktionsaufruf.
 
 ```python
-from shortcutspy import Shortcut, Text, ShowResult, save_shortcut
+from shortcutspy import Shortcut, Text, ShowResult, install_shortcut
 
-shortcut = Shortcut("Begruessung")
-text = Text("Hallo Welt")
-
+shortcut = Shortcut("Hallo Welt")
+text = Text("Willkommen bei ShortcutsPy!")
 shortcut.add(text, ShowResult(text.output))
-save_shortcut(shortcut, "begruessung.shortcut")
+
+install_shortcut(shortcut, "hallo.shortcut")
+# → Kurzbefehl wird gebaut, signiert und in der Kurzbefehle-App geoeffnet
 ```
+
+---
+
+## Inhaltsverzeichnis
+
+- [Installation](#installation)
+- [Schnellstart](#schnellstart)
+- [Kernkonzepte](#kernkonzepte)
+- [Beispiele](#beispiele)
+- [Signieren und Installieren](#signieren-und-installieren)
+- [API-Referenz](#api-referenz)
+- [Projektstruktur](#projektstruktur)
+- [Hinweise](#hinweise)
+
+---
 
 ## Installation
 
-Im Projektordner:
-
 ```bash
+cd ShortcutsPy
 pip install -e .
 ```
 
-Alternativ zum lokalen Entwickeln:
+**Voraussetzungen:**
+- Python 3.10+
+- macOS fuer Signierung und Import (Erstellung funktioniert auf allen Plattformen)
 
-```bash
-python -m pip install -e .
-```
-
-## Projektstruktur
-
-```text
-ShortcutsPy/
-├── pyproject.toml
-├── README.md
-├── shortcutspy/
-│   ├── __init__.py
-│   ├── actions.py
-│   ├── export.py
-│   ├── flow.py
-│   ├── shortcut.py
-│   └── types.py
-├── examples/
-│   ├── demo.py
-│   └── clipboard_helfer.py
-└── automation/
-    ├── create_shortcut_stub.applescript
-    └── run_create_shortcut.sh
-```
-
-## Kernideen
-
-### 1. Aktionen liefern Outputs
-
-Jede Aktion besitzt eine `.output`-Referenz. Diese kann direkt an die nächste Aktion weitergegeben werden.
-
-```python
-from shortcutspy import Shortcut, Text, ShowResult
-
-shortcut = Shortcut("Einfach")
-text = Text("Hallo")
-
-shortcut.add(
-	text,
-	ShowResult(text.output),
-)
-```
-
-### 2. Texteingaben unterstuetzen Tokens
-
-Textartige Parameter koennen Action-Outputs direkt einbetten. Das Framework wandelt solche Werte in das passende Shortcuts-Tokenformat um.
-
-```python
-from shortcutspy import Notification, Text
-
-text = Text("Build erfolgreich")
-notification = Notification(body=text.output, title="Status")
-```
-
-### 3. Kontrollfluss wird als Block modelliert
-
-`If`, `Menu`, `RepeatCount` und `RepeatEach` sammeln intern mehrere Aktionen und werden beim Export in die passende Action-Liste aufgeloest.
+---
 
 ## Schnellstart
 
-### Einfacher Shortcut
+### Kurzbefehl bauen und direkt installieren
 
 ```python
-from shortcutspy import Comment, Shortcut, ShowResult, Text, save_shortcut
+from shortcutspy import Shortcut, Text, Notification, install_shortcut
 
-shortcut = Shortcut("Begruessung")
-text = Text("Hallo Welt")
+shortcut = Shortcut("Meine Nachricht")
+text = Text("Das hat funktioniert!")
 
 shortcut.add(
-	Comment("Mein erster Kurzbefehl"),
-	text,
-	ShowResult(text.output),
+    text,
+    Notification(body=text.output, title="ShortcutsPy"),
 )
 
-save_shortcut(shortcut, "begruessung.shortcut")
+install_shortcut(shortcut, "nachricht.shortcut")
 ```
 
-### JSON fuer Debugging exportieren
+### Nur als Datei exportieren (ohne Installation)
 
 ```python
-from shortcutspy import Shortcut, Text, save_json
+from shortcutspy import Shortcut, Text, save_shortcut, save_json
 
-shortcut = Shortcut("Debug")
-shortcut.add(Text("Test"))
-
-save_json(shortcut, "debug.json")
-```
-
-### Native `.shortcut`-Datei erzeugen
-
-```python
-from shortcutspy import Shortcut, Text, save_shortcut
-
-shortcut = Shortcut("Importierbar")
+shortcut = Shortcut("Export-Test")
 shortcut.add(Text("Fertig"))
 
-save_shortcut(shortcut, "importierbar.shortcut")
+save_shortcut(shortcut, "test.shortcut")   # Binary-Plist
+save_json(shortcut, "test.json")           # JSON zum Debuggen
 ```
+
+---
+
+## Kernkonzepte
+
+### 1. Actions liefern Outputs
+
+Jede Aktion hat eine `.output`-Referenz, die direkt an andere Aktionen weitergegeben werden kann:
+
+```python
+text = Text("Hallo")
+ShowResult(text.output)   # zeigt "Hallo" an
+```
+
+### 2. Text-Token
+
+Textparameter akzeptieren Action-Outputs und wandeln sie automatisch in das Shortcuts-Token-Format um:
+
+```python
+text = Text("Build erfolgreich")
+Notification(body=text.output, title="Status")
+```
+
+### 3. Kontrollfluss als Bloecke
+
+`If`, `Menu`, `RepeatCount` und `RepeatEach` sammeln Aktionen und erzeugen die korrekte Action-Struktur:
+
+```python
+menu = Menu(prompt="Auswahl").option(
+    "Option A",
+    Text("A gewaehlt"),
+).option(
+    "Option B",
+    Text("B gewaehlt"),
+)
+```
+
+### 4. Signieren und Installieren
+
+`install_shortcut()` erledigt alles in einem Schritt:
+Plist schreiben → CLI-Signierung → Kurzbefehle-App oeffnen.
+
+---
 
 ## Beispiele
 
 ### API-Abfrage mit If/Else
 
 ```python
-from shortcutspy import Alert, DownloadURL, GetDictionaryValue, If, Shortcut, ShowResult, URL, save_shortcut
+from shortcutspy import (
+    Alert, DownloadURL, GetDictionaryValue, If,
+    Shortcut, ShowResult, URL, install_shortcut,
+)
 
 shortcut = Shortcut("Wetter Check")
 
 url = URL("https://api.example.com/weather?city=Berlin")
 response = DownloadURL(url.output)
-temperature = GetDictionaryValue(response.output, key="temperature")
+temp = GetDictionaryValue(response.output, key="temperature")
 
-condition = If(temperature.output, condition=100).then(
-	ShowResult(temperature.output),
+check = If(temp.output, condition=100).then(
+    ShowResult(temp.output),
 ).otherwise(
-	Alert("Fehler", message="Keine Daten verfuegbar"),
+    Alert("Fehler", message="Keine Daten verfuegbar"),
 )
 
-shortcut.add(url, response, temperature, condition)
-save_shortcut(shortcut, "wetter.shortcut")
+shortcut.add(url, response, temp, check)
+install_shortcut(shortcut, "wetter.shortcut")
 ```
 
-### Menue mit Optionen
+### Menue mit mehreren Optionen
 
 ```python
-from shortcutspy import GetClipboard, Menu, Shortcut, ShowResult, TakePhoto, TakeScreenshot
+from shortcutspy import (
+    GetClipboard, Menu, Shortcut, ShowResult,
+    TakePhoto, TakeScreenshot, install_shortcut,
+)
 
 shortcut = Shortcut("Schnellaktionen")
 clipboard = GetClipboard()
 
 menu = Menu(prompt="Was moechtest du tun?").option(
-	"Foto aufnehmen",
-	TakePhoto(),
+    "Foto aufnehmen",
+    TakePhoto(),
 ).option(
-	"Screenshot",
-	TakeScreenshot(),
+    "Screenshot",
+    TakeScreenshot(),
 ).option(
-	"Zwischenablage anzeigen",
-	clipboard,
-	ShowResult(clipboard.output),
+    "Zwischenablage anzeigen",
+    clipboard,
+    ShowResult(clipboard.output),
 )
 
 shortcut.add(menu)
+install_shortcut(shortcut, "schnellaktionen.shortcut")
 ```
 
 ### Schleife ueber eine Liste
 
 ```python
-from shortcutspy import AppendVariable, CombineText, GetClipboard, GetVariable, RepeatEach, Shortcut, SplitText, ShowResult
+from shortcutspy import (
+    AppendVariable, CombineText, GetClipboard, GetVariable,
+    RepeatEach, Shortcut, ShowResult, SplitText, install_shortcut,
+)
 
 shortcut = Shortcut("Zeilen sammeln")
 
@@ -182,136 +183,183 @@ clipboard = GetClipboard()
 lines = SplitText(clipboard.output, separator="Neue Zeile")
 
 loop = RepeatEach(lines.output).body(
-	AppendVariable("zeilen", input=lines.output),
+    AppendVariable("zeilen", input=lines.output),
 )
 
 result = GetVariable("zeilen")
 combined = CombineText(result.output, separator="\n")
 
 shortcut.add(clipboard, lines, loop, result, combined, ShowResult(combined.output))
+install_shortcut(shortcut, "zeilen.shortcut")
 ```
 
-## Oeffentliche API
-
-Das Paket exportiert die wichtigsten Bausteine direkt ueber `shortcutspy`:
+### Benutzereingabe mit Ask
 
 ```python
-from shortcutspy import *
+from shortcutspy import Ask, Notification, Shortcut, SetClipboard, install_shortcut
+
+shortcut = Shortcut("Schnellnotiz")
+
+eingabe = Ask(question="Was moechtest du notieren?")
+shortcut.add(
+    eingabe,
+    SetClipboard(eingabe.output),
+    Notification(body="In Zwischenablage kopiert!", title="Notiz"),
+)
+
+install_shortcut(shortcut, "notiz.shortcut")
 ```
 
-Wichtige Gruppen:
-
-- `Shortcut` zum Erzeugen eines kompletten Workflows
-- `Text`, `URL`, `DownloadURL`, `Ask`, `Notification`, `ShowResult` und viele weitere Aktionen aus `actions.py`
-- `If`, `Menu`, `RepeatCount`, `RepeatEach` fuer Kontrollfluss
-- `ActionOutput`, `Variable`, `CurrentDate` fuer Referenzen und Tokens
-- `save_json`, `save_actions_json`, `save_shortcut`, `to_json`, `to_plist` fuer Export
-- `sign_shortcut`, `install_shortcut` fuer Signierung und Import
-
-## Export
-
-### `save_json(shortcut, path)`
-
-Schreibt das komplette Shortcut-Dictionary als JSON auf die Platte.
-
-### `save_actions_json(shortcut, path)`
-
-Schreibt nur die Liste der Aktionen. Das ist praktisch zum Debuggen einzelner Workflows.
-
-### `save_shortcut(shortcut, path)`
-
-Schreibt eine native Binary-Plist-Datei mit der Endung `.shortcut`.
-
-### `sign_shortcut(input_path, output_path=None, mode="anyone")`
-
-Signiert eine `.shortcut`-Datei mit dem macOS `shortcuts`-CLI. Gibt den Pfad zur signierten Datei zurueck.
-
-### `install_shortcut(shortcut, path, mode="anyone")`
-
-All-in-one: Schreibt, signiert und oeffnet den Kurzbefehl direkt in der Kurzbefehle-App.
-
-```python
-from shortcutspy import Shortcut, Text, ShowResult, install_shortcut
-
-shortcut = Shortcut("Mein Kurzbefehl")
-shortcut.add(Text("Hallo"), ShowResult())
-
-install_shortcut(shortcut, "mein_kurzbefehl.shortcut")
-# -> Kurzbefehle-App oeffnet sich mit Import-Dialog
-```
-
-### `to_json(shortcut)` und `to_plist(shortcut)`
-
-Liefert den Export als String oder Bytes, ohne direkt eine Datei zu schreiben.
-
-## Demo ausfuehren
-
-### Einfaches Demo
+### Fertige Beispiel-Scripts ausfuehren
 
 ```bash
 PYTHONPATH=. python examples/demo.py
+PYTHONPATH=. python examples/clipboard_helfer.py
+PYTHONPATH=. python examples/produktivitaets_hub.py    # Baut + signiert + oeffnet
 ```
 
-### Produktivitaets-Hub (mit automatischem Import)
+Oder per Shell-Script:
 
 ```bash
-PYTHONPATH=. python examples/produktivitaets_hub.py
-```
-
-Baut den Kurzbefehl, signiert ihn und oeffnet ihn in der Kurzbefehle-App.
-
-### Shell-Script fuer beliebige Beispiele
-
-```bash
-chmod +x automation/build_and_install.sh
 ./automation/build_and_install.sh examples/produktivitaets_hub.py
-./automation/build_and_install.sh examples/clipboard_helfer.py
 ```
 
-## Hinweise
+---
 
-- Das Projekt bildet viele haeufige Apple-Shortcuts-Aktionen als Python-Klassen ab.
-- Nicht explizit modellierte Aktionen koennen ueber `RawAction` eingebunden werden.
-- Drittanbieter-App-Intents lassen sich ueber `AppIntentAction` beschreiben.
-- `Shortcut.set_icon(color, glyph)` erlaubt es, Icon-Farbe und Glyph-Nummer manuell zu setzen.
-- Nicht jede von Apple intern verwendete Parameterstruktur ist offiziell dokumentiert. Bei exotischen Aktionen kann Feintuning noetig sein.
-- Signierung erfordert macOS mit angemeldeter Apple-ID.
+## Signieren und Installieren
 
-## Automatisierung
-
-### Empfohlener Weg: sign + open (CLI)
-
-Das macOS `shortcuts`-CLI kann `.shortcut`-Dateien signieren. Danach lassen sie sich direkt oeffnen und importieren.
+### Python (empfohlen)
 
 ```python
-from shortcutspy import install_shortcut
-
+# All-in-one: bauen + signieren + in Kurzbefehle-App oeffnen
 install_shortcut(shortcut, "mein_kurzbefehl.shortcut")
+
+# Nur signieren, ohne zu oeffnen
+from shortcutspy import save_shortcut, sign_shortcut
+save_shortcut(shortcut, "mein.shortcut")
+sign_shortcut("mein.shortcut", "mein_signed.shortcut")
 ```
 
-Oder per Shell:
+### Shell
 
 ```bash
+# Manuell signieren und oeffnen
 shortcuts sign -m anyone -i mein.shortcut -o mein_signed.shortcut
 open mein_signed.shortcut
 ```
 
-### Alternativer Weg: AppleScript UI-Scripting
+### Signierungsmodi
 
-Fuer Faelle ohne CLI-Zugriff gibt es eine AppleScript-basierte Loesung:
+| Modus | Beschreibung |
+|-------|-------------|
+| `anyone` | Jeder kann den Kurzbefehl importieren (Standard) |
+| `people-who-know-me` | Nur Kontakte koennen importieren |
 
-- `automation/create_shortcut_stub.applescript`
-- `automation/run_create_shortcut.sh`
+### Voraussetzungen
 
-Voraussetzung: Bedienungshilfen-Zugriff in System Settings > Privacy & Security > Accessibility.
+- macOS (Monterey oder neuer)
+- Kurzbefehle-App installiert
+- Mit Apple-ID angemeldet
+- Auf nicht-macOS-Systemen gibt es eine klare Fehlermeldung
 
-Hinweis: UI-Automation ist fragil und kann je nach macOS-Version angepasst werden muessen.
+---
 
-## Status
+## API-Referenz
 
-Das Paket ist lauffaehig und der aktuelle Stand wurde lokal validiert:
+### Shortcut-Builder
 
-- Import des Pakets funktioniert
-- Das Demo laeuft ohne Fehler
-- JSON- und `.shortcut`-Export funktionieren
-- Signierung und Import via `install_shortcut()` funktionieren
+| Funktion | Beschreibung |
+|----------|-------------|
+| `Shortcut(name)` | Neuen Kurzbefehl erstellen |
+| `.add(*actions)` | Aktionen hinzufuegen |
+| `.set_icon(color, glyph)` | Icon-Farbe und Glyph setzen |
+
+### Export
+
+| Funktion | Beschreibung |
+|----------|-------------|
+| `install_shortcut(shortcut, path)` | Bauen + signieren + in App oeffnen |
+| `save_shortcut(shortcut, path)` | Unsigned `.shortcut`-Datei schreiben |
+| `sign_shortcut(input, output, mode)` | Bestehende Datei signieren |
+| `save_json(shortcut, path)` | JSON-Export |
+| `save_actions_json(shortcut, path)` | Nur Action-Liste als JSON |
+| `to_json(shortcut)` | JSON als String |
+| `to_plist(shortcut)` | Binary-Plist als Bytes |
+
+### Kontrollfluss
+
+| Klasse | Beschreibung |
+|--------|-------------|
+| `If(input, condition).then(...).otherwise(...)` | Bedingung |
+| `Menu(prompt).option(titel, ...)` | Auswahlmenue |
+| `RepeatCount(n).body(...)` | Zaehler-Schleife |
+| `RepeatEach(input).body(...)` | For-Each-Schleife |
+
+### Referenzen und Variablen
+
+| Klasse | Beschreibung |
+|--------|-------------|
+| `action.output` | Output einer Aktion referenzieren |
+| `Variable(name)` | Benannte Variable |
+| `CurrentDate()` | Aktuelles Datum als Token |
+
+### Aktionen (150+)
+
+Das Framework bildet ueber 150 Apple-Shortcuts-Aktionen als Python-Klassen ab:
+
+| Kategorie | Beispiele |
+|-----------|----------|
+| Text | `Text`, `SplitText`, `CombineText`, `ReplaceText`, `MatchText`, `ChangeCase` |
+| Eingabe | `Ask`, `ChooseFromList`, `Alert`, `Notification`, `ShowResult` |
+| Zahlen | `Number`, `RandomNumber`, `Calculate`, `Round`, `FormatNumber` |
+| Datum | `Date`, `FormatDate`, `AdjustDate`, `TimeBetweenDates` |
+| Listen | `List`, `GetItemFromList`, `Dictionary`, `GetDictionaryValue` |
+| Web | `URL`, `DownloadURL`, `SearchWeb`, `OpenURL`, `GetWebPageContents` |
+| Dateien | `GetFile`, `SaveFile`, `DeleteFile`, `Zip`, `Unzip` |
+| Bilder | `TakePhoto`, `ResizeImage`, `CropImage`, `ConvertImage`, `RemoveBackground` |
+| PDF | `MakePDF`, `GetTextFromPDF`, `SplitPDF`, `CompressPDF` |
+| Medien | `PlayMusic`, `RecordAudio`, `EncodeMedia`, `TrimVideo` |
+| Geraet | `GetDeviceDetails`, `GetBatteryLevel`, `SetBrightness`, `SetWifi` |
+| Standort | `GetCurrentLocation`, `GetDistance`, `GetDirections` |
+| Kalender | `AddNewEvent`, `GetUpcomingEvents`, `AddReminder` |
+| Sharing | `SetClipboard`, `GetClipboard`, `Share`, `AirDrop`, `SendMessage` |
+| Scripting | `RunShellScript`, `RunAppleScript`, `RunShortcut`, `RunJavaScriptOnWebPage` |
+| Variablen | `SetVariable`, `GetVariable`, `AppendVariable` |
+
+Nicht abgedeckte Aktionen: `RawAction(identifier, ...)` oder `AppIntentAction(...)` fuer Drittanbieter-Apps.
+
+---
+
+## Projektstruktur
+
+```
+ShortcutsPy/
+├── pyproject.toml                        # Paket-Konfiguration
+├── README.md
+├── shortcutspy/
+│   ├── __init__.py                       # Public API
+│   ├── actions.py                        # 150+ Action-Klassen
+│   ├── export.py                         # JSON, Plist, Signierung, Install
+│   ├── flow.py                           # If, Menu, Repeat-Bloecke
+│   ├── shortcut.py                       # Shortcut-Builder
+│   └── types.py                          # ActionOutput, Variable, CurrentDate
+├── examples/
+│   ├── demo.py                           # Einfaches Hallo-Welt
+│   ├── clipboard_helfer.py               # Menue mit Zwischenablage-Tools
+│   └── produktivitaets_hub.py            # 5-Optionen Hub mit Auto-Install
+└── automation/
+    ├── build_and_install.sh              # Shell: Python → Sign → Open
+    ├── create_shortcut_stub.applescript   # UI-Scripting (Fallback)
+    └── run_create_shortcut.sh            # AppleScript-Wrapper
+```
+
+---
+
+## Hinweise
+
+- Alle Export-Funktionen (`save_json`, `save_shortcut`, `to_json`, `to_plist`) laufen auf **jeder Plattform**
+- `sign_shortcut` und `install_shortcut` erfordern **macOS** mit Kurzbefehle-App und Apple-ID
+- Auf nicht-macOS gibt es eine klare Fehlermeldung statt eines Crashs
+- `RawAction(identifier, ...)` erlaubt Zugriff auf nicht explizit modellierte Aktionen
+- `AppIntentAction(...)` ermoeglicht Drittanbieter-App-Intents
+- Nicht jede Apple-interne Parameterstruktur ist offiziell dokumentiert — bei exotischen Aktionen kann Feintuning noetig sein
