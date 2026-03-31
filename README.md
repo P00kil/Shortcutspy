@@ -366,3 +366,13 @@ ShortcutsPy/
 - `RawAction(identifier, ...)` erlaubt Zugriff auf nicht explizit modellierte Aktionen
 - `AppIntentAction(...)` ermoeglicht Drittanbieter-App-Intents
 - Nicht jede Apple-interne Parameterstruktur ist offiziell dokumentiert — bei exotischen Aktionen kann Feintuning noetig sein
+
+---
+
+## Disclaimer
+
+Dieses Projekt wird **"as is"** bereitgestellt, ohne jegliche Gewaehrleistung — weder ausdruecklich noch stillschweigend. Die Nutzung erfolgt auf eigenes Risiko. Der Autor uebernimmt keine Haftung fuer Schaeden, Datenverlust oder sonstige Folgen, die durch die Verwendung dieser Software entstehen.
+
+ShortcutsPy ist ein **inoffizielles** Community-Projekt und steht in keiner Verbindung zu Apple Inc. "Apple", "Shortcuts" und "Kurzbefehle" sind Marken der Apple Inc. Alle Rechte liegen bei ihren jeweiligen Inhabern.
+
+Durch die Nutzung dieser Software erklaerst du dich mit den Bedingungen der [MIT-Lizenz](LICENSE) einverstanden.
