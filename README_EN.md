@@ -27,6 +27,7 @@ install_shortcut(shortcut, "hello.shortcut")
 - [Examples](#examples)
 - [Signing](#signing)
 - [API Reference](#api-reference)
+- [Wiki](#wiki)
 - [Project Structure](#project-structure)
 - [Disclaimer](#disclaimer)
 
@@ -371,6 +372,21 @@ Here is an overview of the main categories:
 
 ---
 
+## Wiki
+
+The comprehensive **[Wiki](https://github.com/P00kil/Shortcutspy/wiki)** provides additional guides and references:
+
+| Page | Content |
+|------|--------|
+| [Home](https://github.com/P00kil/Shortcutspy/wiki) | Landing page and overview |
+| [Installation & Setup](https://github.com/P00kil/Shortcutspy/wiki/Installation-&-Setup) | Step-by-step installation guide |
+| [Getting Started](https://github.com/P00kil/Shortcutspy/wiki/Getting-Started) | Your first shortcut in 5 minutes |
+| [Core Concepts](https://github.com/P00kil/Shortcutspy/wiki/Core-Concepts) | Actions, outputs, control flow in detail |
+| [FAQ](https://github.com/P00kil/Shortcutspy/wiki/FAQ) | Frequently asked questions |
+| [Troubleshooting](https://github.com/P00kil/Shortcutspy/wiki/Troubleshooting) | Problem solving and error diagnosis |
+
+---
+
 ## Project Structure
 
 ```
@@ -390,6 +406,7 @@ ShortcutsPy/
 │   └── build_and_install.sh # Shell: Python script → Sign → Open
 ├── pyproject.toml           # Package configuration
 ├── LICENSE                  # MIT License
+├── wiki/                    # Wiki pages (also on GitHub Wiki)
 ├── README.md                # Documentation (German)
 └── README_EN.md             # This file (English)
 ```
