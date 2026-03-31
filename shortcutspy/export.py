@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import platform
 import plistlib
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -46,13 +48,29 @@ def save_actions_json(shortcut: Shortcut, path: str) -> Path:
     return target
 
 
+def _require_shortcuts_cli() -> None:
+    """Raise a clear error when the shortcuts CLI is unavailable."""
+    if platform.system() != "Darwin":
+        raise RuntimeError(
+            "sign_shortcut/install_shortcut erfordern macOS. "
+            "Auf anderen Systemen kannst du save_shortcut() nutzen "
+            "und die Datei manuell auf einem Mac signieren."
+        )
+    if shutil.which("shortcuts") is None:
+        raise RuntimeError(
+            "Das 'shortcuts'-CLI wurde nicht gefunden. "
+            "Stelle sicher, dass die Kurzbefehle-App installiert ist."
+        )
+
+
 def sign_shortcut(input_path: str, output_path: str | None = None,
                   mode: str = "anyone") -> Path:
     """Sign a .shortcut file using the macOS shortcuts CLI.
 
     Returns the path to the signed file.
-    Requires macOS with the Shortcuts app installed.
+    Requires macOS with the Shortcuts app and an Apple-ID.
     """
+    _require_shortcuts_cli()
     src = Path(input_path)
     if output_path is None:
         dst = src.with_stem(src.stem + "_signed")
@@ -71,7 +89,9 @@ def install_shortcut(shortcut: Shortcut, path: str,
 
     This is the all-in-one function: it writes the unsigned plist,
     signs it via the macOS CLI, and opens the signed file for import.
+    Requires macOS with the Shortcuts app and an Apple-ID.
     """
+    _require_shortcuts_cli()
     unsigned = save_shortcut(shortcut, path)
     signed = sign_shortcut(str(unsigned), mode=mode)
     subprocess.run(["open", str(signed)], check=True)
