@@ -61,6 +61,12 @@ class ActionOutput:
 class CurrentDate:
     """Reference to the current date token."""
 
+    def as_attachment(self) -> dict:
+        return {
+            "Value": {"Type": "CurrentDate"},
+            "WFSerializationType": "WFTextTokenAttachment",
+        }
+
     def as_text_token(self) -> dict:
         return {
             "Value": {

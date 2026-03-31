@@ -53,6 +53,19 @@ class ShowResult(Action):
         super().__init__(**params)
 
 
+class Ask(Action):
+    identifier = "is.workflow.actions.ask"
+    output_name = "Bereitgestellte Eingabe"
+
+    def __init__(self, question: str = "", default_answer: str = "", input_type: str = "Text"):
+        params: dict[str, Any] = {"WFAskActionPrompt": question}
+        if default_answer:
+            params["WFAskActionDefaultAnswer"] = default_answer
+        if input_type != "Text":
+            params["WFInputType"] = input_type
+        super().__init__(**params)
+
+
 class Alert(Action):
     identifier = "is.workflow.actions.alert"
 
@@ -1533,6 +1546,8 @@ def _resolve(value: Any) -> Any:
         return value.as_attachment()
     if isinstance(value, Action):
         return value.output.as_attachment()
+    if isinstance(value, CurrentDate):
+        return value.as_attachment()
     if isinstance(value, Variable):
         return value.as_variable()
     return value
