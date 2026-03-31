@@ -1,18 +1,23 @@
 # Wiki-Navigation
 
-Das ist die automatische Navigations-Datei fuer das GitHub Wiki.
+## Deutsch
 
-## Navigation
-
-- **[Home](Home)** — Wiki-Startseite
+- **[Home](Home)**
 - **Einstieg**
   - [Installation & Setup](Installation-&-Setup)
-  - [Getting Started: Erstes Shortcut](Getting-Started)
+  - [Getting Started](Getting-Started)
   - [Core Concepts](Core-Concepts)
 - **Hilfe**
   - [FAQ](FAQ)
   - [Troubleshooting](Troubleshooting)
 
----
+## English
 
-Diese Seiten befinden sich im `/wiki` Verzeichnis und sind auch im GitHub-Wiki verfuegbar.
+- **[Home](Home-EN)**
+- **Getting Started**
+  - [Installation & Setup](Installation-&-Setup-EN)
+  - [Getting Started](Getting-Started-EN)
+  - [Core Concepts](Core-Concepts-EN)
+- **Help**
+  - [FAQ](FAQ-EN)
+  - [Troubleshooting](Troubleshooting-EN)

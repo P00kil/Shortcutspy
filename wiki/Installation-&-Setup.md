@@ -2,6 +2,8 @@
 
 Diese Seite fuehrt dich durch die vollstaendige Installation und Konfiguration von ShortcutsPy.
 
+> **English?** → [Installation & Setup (EN)](Installation-&-Setup-EN)
+
 ## Voraussetzungen
 
 Bevor du startest, stelle sicher, dass du folgendes hast:

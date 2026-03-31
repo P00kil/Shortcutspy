@@ -4,6 +4,8 @@ Willkommen zum Wiki für **ShortcutsPy** — der Python-Framework fuer Apple-Kur
 
 Dieses Wiki bietet detaillierte Anleitungen, Tutorials und Referenzen fuer alle Erfahrungsstufen.
 
+> **English?** → [Home (EN)](Home-EN)
+
 ## Fuer Anfaenger
 
 Neu hier? Starten Sie hier:

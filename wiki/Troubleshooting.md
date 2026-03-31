@@ -2,6 +2,8 @@
 
 Wenn du auf Probleme stösst, schau hier zuerst nach.
 
+> **English?** → [Troubleshooting (EN)](Troubleshooting-EN)
+
 ---
 
 ## Installation und Setup

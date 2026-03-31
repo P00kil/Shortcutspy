@@ -2,6 +2,8 @@
 
 In diesen 5 Minuten erstellst du deinen ersten funktionsfaehigen Kurzbefehl mit ShortcutsPy.
 
+> **English?** → [Getting Started (EN)](Getting-Started-EN)
+
 ## Schritt 1: Datei erstellen
 
 Erstelle eine neue Datei namens `mein_kurzbefehl.py`:

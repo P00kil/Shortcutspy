@@ -2,6 +2,8 @@
 
 Hier sind Antworten auf Fragen, die Nutzer häufig stellen.
 
+> **English?** → [FAQ (EN)](FAQ-EN)
+
 ---
 
 ## Allgemeine Fragen

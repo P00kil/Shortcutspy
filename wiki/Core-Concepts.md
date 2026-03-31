@@ -2,6 +2,8 @@
 
 Diese Seite erklaert die fundamentalen Konzepte hinter ShortcutsPy.
 
+> **English?** → [Core Concepts (EN)](Core-Concepts-EN)
+
 ---
 
 ## 1. Actions (Aktionen)
