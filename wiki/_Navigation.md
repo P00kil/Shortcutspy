@@ -7,6 +7,7 @@
   - [Installation & Setup](Installation-&-Setup)
   - [Getting Started](Getting-Started)
   - [Core Concepts](Core-Concepts)
+  - [Aktionen](Aktionen)
 - **Hilfe**
   - [FAQ](FAQ)
   - [Troubleshooting](Troubleshooting)
