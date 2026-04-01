@@ -20,7 +20,13 @@ Here are answers to questions that users frequently ask.
 
 ### Q: Can I edit existing shortcuts?
 
-**A:** No, ShortcutsPy always creates new shortcuts from scratch. You cannot load and edit existing `.shortcut` files.
+**A:** Not directly as a live shortcut object inside the framework. But you can convert existing `.shortcut` files into ShortcutsPy code with the decompiler, modify the generated Python, and then export the shortcut again.
+
+```bash
+python shortcutspy/decompile.py my_shortcut.shortcut -o editable.py
+```
+
+After that, you can extend `editable.py` and generate a new `.shortcut` file from it.
 
 ---
 

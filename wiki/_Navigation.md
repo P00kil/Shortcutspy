@@ -20,6 +20,7 @@
   - [Installation & Setup](Installation-&-Setup-EN)
   - [Getting Started](Getting-Started-EN)
   - [Core Concepts](Core-Concepts-EN)
+  - [Decompiler](Decompiler-EN)
 - **Help**
   - [FAQ](FAQ-EN)
   - [Troubleshooting](Troubleshooting-EN)
