@@ -16,6 +16,7 @@ Neu hier? Starten Sie hier:
 
 ## Referenz & Hilfe
 
+- **[Decompiler](Decompiler)** — Bestehende `.shortcut`-Dateien in ShortcutsPy-Code umwandeln
 - **[FAQ](FAQ)** — Haeufig gestellte Fragen
 - **[Troubleshooting](Troubleshooting)** — Liste mit Loesungen zu haeufigen Problemen
 

@@ -25,6 +25,7 @@ install_shortcut(shortcut, "hallo.shortcut")
 
 - [Installation](#installation)
 - [Schnellstart](#schnellstart)
+- [Decompiler](#decompiler)
 - [Grundkonzepte](#grundkonzepte)
 - [Beispiele](#beispiele)
 - [Signierung](#signierung)
@@ -90,6 +91,43 @@ shortcut.add(Text("Fertig"))
 save_shortcut(shortcut, "test.shortcut")   # Binary-Plist (.shortcut-Datei)
 save_json(shortcut, "test.json")           # JSON-Datei zum Debuggen
 ```
+
+---
+
+## Decompiler
+
+Mit dem Decompiler kannst du bestehende `.shortcut`-Dateien wieder in lesbaren ShortcutsPy-Code umwandeln.
+Das ist praktisch, wenn du einen vorhandenen Kurzbefehl analysieren, dokumentieren oder als Python-Basis weiterentwickeln willst.
+
+### Aufruf
+
+Aus dem Repository heraus:
+
+```bash
+python shortcutspy/decompile.py mein_kurzbefehl.shortcut
+python shortcutspy/decompile.py mein_kurzbefehl.shortcut -o dekompiliert.py
+python shortcutspy/decompile.py mein_kurzbefehl.shortcut --json
+```
+
+Alternativ als Modul:
+
+```bash
+python -m shortcutspy.decompile mein_kurzbefehl.shortcut -o dekompiliert.py
+```
+
+### Was erzeugt der Decompiler?
+
+- ShortcutsPy-Aktionen wie `Text`, `Ask`, `If`, `Menu` oder `RepeatEach`
+- Variablenzuweisungen fuer Action-Outputs, damit Referenzen erhalten bleiben
+- Auf Wunsch die rohe Plist-Struktur als JSON mit `--json`
+
+### Hinweise
+
+- Unbekannte Aktionen werden als `RawAction(...)` ausgegeben
+- Gemischte Text-Tokens koennen als Kommentar markiert werden und brauchen ggf. manuelle Nacharbeit
+- Der Decompiler erzeugt Python-Code zur Weiterbearbeitung, nicht ein perfektes 1:1-Reverse-Engineering jeder internen Shortcut-Metadaten
+
+Mehr Details findest du im Wiki unter [Decompiler](https://github.com/P00kil/Shortcutspy/wiki/Decompiler).
 
 ---
 
@@ -384,6 +422,7 @@ Das ausfuehrliche **[Wiki](https://github.com/P00kil/Shortcutspy/wiki)** bietet 
 | [Installation & Setup](https://github.com/P00kil/Shortcutspy/wiki/Installation-&-Setup) | Schritt-fuer-Schritt Installationsanleitung |
 | [Getting Started](https://github.com/P00kil/Shortcutspy/wiki/Getting-Started) | Erstes Shortcut in 5 Minuten |
 | [Core Concepts](https://github.com/P00kil/Shortcutspy/wiki/Core-Concepts) | Actions, Outputs, Kontrollfluss im Detail |
+| [Decompiler](https://github.com/P00kil/Shortcutspy/wiki/Decompiler) | Bestehende `.shortcut`-Dateien in ShortcutsPy-Code umwandeln |
 | [FAQ](https://github.com/P00kil/Shortcutspy/wiki/FAQ) | Haeufig gestellte Fragen |
 | [Troubleshooting](https://github.com/P00kil/Shortcutspy/wiki/Troubleshooting) | Problemloesungen und Fehlersuche |
 
@@ -396,6 +435,7 @@ ShortcutsPy/
 ├── shortcutspy/
 │   ├── __init__.py          # Public API — alle Klassen und Funktionen
 │   ├── actions.py           # 150+ Action-Klassen (Text, URL, Ask, ...)
+│   ├── decompile.py         # .shortcut-Dateien in ShortcutsPy-Code umwandeln
 │   ├── export.py            # Export, Signierung und Installation
 │   ├── flow.py              # Kontrollfluss (If, Menu, Repeat)
 │   ├── shortcut.py          # Shortcut-Builder
