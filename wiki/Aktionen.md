@@ -3,7 +3,81 @@
 Vollständige Referenz aller Aktionsklassen und Kontrollfluss-Blöcke in `shortcutspy`.  
 Jede Aktion wird mit **Beschreibung**, **Parametern** (inkl. Typ und Standardwert) und dem internen **Identifier** dokumentiert.
 
-> **Hinweis:** Parameter vom Typ `Any` akzeptieren direkte Werte, `ActionOutput`-Referenzen (Ausgabe einer anderen Aktion), `Variable`-Objekte und `CurrentDate`.
+---
+
+## Schnellstart
+
+### Import
+
+Alle Klassen werden direkt aus dem Top-Level-Paket importiert:
+
+```python
+from shortcutspy import (
+    Shortcut, Text, ShowResult, Ask, Alert, Number, Calculate,
+    If, Menu, RepeatCount, RepeatEach,
+    SetVariable, GetVariable, Variable, CurrentDate, ActionOutput,
+    save_shortcut, save_json, install_shortcut,
+)
+```
+
+### Grundmuster
+
+Das Grundmuster ist immer gleich: **Aktionen erstellen → über `.output` verketten → zum Shortcut hinzufügen → exportieren**.
+
+```python
+from shortcutspy import Shortcut, Text, ChangeCase, ShowResult, save_shortcut
+
+# 1. Shortcut erstellen
+sc = Shortcut("Mein erster Shortcut")
+
+# 2. Aktionen erstellen und verketten
+text = Text("hallo welt")
+gross = ChangeCase(text.output, case="UPPERCASE")
+anzeige = ShowResult(gross.output)
+
+# 3. Aktionen zum Shortcut hinzufügen
+sc.add(text, gross, anzeige)
+
+# 4. Als .shortcut-Datei exportieren
+save_shortcut(sc, "mein_shortcut.shortcut")
+```
+
+### Parameter vom Typ `Any`
+
+Viele Aktionen haben Parameter vom Typ `Any`. Diese akzeptieren:
+
+| Eingabe | Beispiel | Beschreibung |
+|---------|----------|--------------|
+| Rohwerte | `"Hallo"`, `42`, `3.14` | Direkte Strings, Integers oder Floats |
+| `ActionOutput` | `text_aktion.output` | Ausgabe einer vorherigen Aktion — so werden Aktionen verkettet |
+| `Variable` | `Variable("mein_name")` | Referenz auf eine benannte Shortcut-Variable |
+| `CurrentDate` | `CurrentDate()` | Das aktuelle Datum/Uhrzeit als Token |
+
+### Vollständiges Beispiel
+
+```python
+from shortcutspy import (
+    Shortcut, Ask, Text, ChangeCase, ShowResult,
+    Notification, save_shortcut, install_shortcut,
+)
+
+sc = Shortcut("Begrüßung")
+sc.set_icon(color=4282601983, glyph=61440)
+
+frage = Ask(question="Wie heißt du?", input_type="Text")
+begruessung = Text(frage.output)
+gross = ChangeCase(begruessung.output, case="UPPERCASE")
+anzeige = ShowResult(gross.output)
+hinweis = Notification(body=gross.output, title="Willkommen!")
+
+sc.add(frage, begruessung, gross, anzeige, hinweis)
+
+# Exportieren als .shortcut-Datei
+save_shortcut(sc, "begruessung.shortcut")
+
+# Oder direkt auf macOS installieren (signiert und öffnet die Kurzbefehle-App)
+# install_shortcut(sc, "begruessung.shortcut")
+```
 
 ---
 
@@ -36,7 +110,7 @@ Jede Aktion wird mit **Beschreibung**, **Parametern** (inkl. Typ und Standardwer
 
 ## Kontrollfluss
 
-Kontrollfluss-Blöcke stammen aus `shortcutspy.flow` und werden nicht als einzelne Aktionen, sondern als Blöcke mit `.collect()` in den Shortcut eingebettet.
+Kontrollfluss-Blöcke werden nicht als einzelne Aktionen, sondern als Blöcke mit verketteten Methoden in den Shortcut eingebettet.
 
 ---
 
@@ -44,7 +118,7 @@ Kontrollfluss-Blöcke stammen aus `shortcutspy.flow` und werden nicht als einzel
 Bedingte Verzweigung (Wenn / Sonst / Ende Wenn).
 
 ```python
-from shortcutspy.flow import If
+from shortcutspy import If, ShowResult
 
 block = (
     If(input=some_action.output, condition=100, value="Hallo")
@@ -69,7 +143,7 @@ block = (
 Menü mit mehreren Optionen (Wähle aus Menü).
 
 ```python
-from shortcutspy.flow import Menu
+from shortcutspy import Menu, ShowResult
 
 block = (
     Menu(prompt="Was möchtest du tun?")
@@ -92,7 +166,7 @@ block = (
 Wiederholt Aktionen eine feste Anzahl von Malen.
 
 ```python
-from shortcutspy.flow import RepeatCount
+from shortcutspy import RepeatCount, ShowResult
 
 block = RepeatCount(count=5).body(ShowResult("Iteration"))
 ```
@@ -111,7 +185,7 @@ block = RepeatCount(count=5).body(ShowResult("Iteration"))
 Wiederholt Aktionen für jedes Element einer Liste.
 
 ```python
-from shortcutspy.flow import RepeatEach
+from shortcutspy import RepeatEach, ShowResult
 
 block = RepeatEach(input=my_list.output).body(ShowResult("Element"))
 ```
@@ -127,6 +201,21 @@ block = RepeatEach(input=my_list.output).body(ShowResult("Element"))
 ---
 
 ## Benutzerinteraktion
+
+**Beispiel:** Benutzer nach seinem Namen fragen und das Ergebnis anzeigen:
+
+```python
+from shortcutspy import Shortcut, Ask, Alert, ShowResult, save_shortcut
+
+sc = Shortcut("Benutzer-Begrüßung")
+
+frage = Ask(question="Wie heißt du?", input_type="Text")
+ergebnis = ShowResult(frage.output)
+hinweis = Alert(title="Willkommen!", message=frage.output, show_cancel=False)
+
+sc.add(frage, ergebnis, hinweis)
+save_shortcut(sc, "begruessung.shortcut")
+```
 
 ### `Comment`
 Fügt einen unsichtbaren Kommentar in den Shortcut ein (wird nicht ausgeführt).
@@ -193,6 +282,29 @@ Sendet eine lokale Push-Benachrichtigung.
 
 ## Variablen
 
+**Beispiel:** Wert in einer Variable speichern und an anderer Stelle wiederverwenden:
+
+```python
+from shortcutspy import (
+    Shortcut, Ask, SetVariable, GetVariable, Variable,
+    ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Variablen-Demo")
+
+frage = Ask(question="Dein Lieblingsessen?", input_type="Text")
+speichern = SetVariable("essen", frage.output)
+
+# Später im Shortcut: Variable per Name abrufen
+abrufen = GetVariable("essen")
+anzeige = ShowResult(abrufen.output)
+
+sc.add(frage, speichern, abrufen, anzeige)
+save_shortcut(sc, "variablen_demo.shortcut")
+```
+
+> **Tipp:** Mit `Variable("name")` kann eine benannte Variable auch direkt als Parameter übergeben werden, z. B. `ShowResult(Variable("essen"))`.
+
 ### `SetVariable`
 Speichert einen Wert in einer benannten Variable.
 
@@ -230,6 +342,27 @@ Hängt einen Wert an eine bestehende Variable an.
 ---
 
 ## Text
+
+**Beispiel:** Text erstellen, aufteilen, transformieren und wieder zusammensetzen:
+
+```python
+from shortcutspy import (
+    Shortcut, Text, SplitText, CombineText, ChangeCase,
+    ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Text-Pipeline")
+
+text = Text("Äpfel\nBananen\nKirschen")
+teile = SplitText(text.output, separator="Neue Zeile")
+gross = ChangeCase(teile.output, case="UPPERCASE")
+zusammen = CombineText(gross.output, separator=" | ")
+anzeige = ShowResult(zusammen.output)
+
+sc.add(text, teile, gross, zusammen, anzeige)
+save_shortcut(sc, "text_pipeline.shortcut")
+# Ergebnis: "ÄPFEL | BANANEN | KIRSCHEN"
+```
 
 ### `Text`
 Erstellt ein Text-Objekt.
@@ -336,6 +469,26 @@ Erkennt Text in einem Bild oder Dokument (OCR).
 
 ## Zahlen & Mathematik
 
+**Beispiel:** Mehrwertsteuer berechnen und formatiert anzeigen:
+
+```python
+from shortcutspy import (
+    Shortcut, Ask, Number, Calculate, Round, FormatNumber,
+    ShowResult, save_shortcut,
+)
+
+sc = Shortcut("MwSt-Rechner")
+
+netto = Ask(question="Nettobetrag in €?", input_type="Text")
+mwst = Calculate(netto.output, operation="*", operand=0.19)
+gerundet = Round(mwst.output, mode="Normal")
+formatiert = FormatNumber(gerundet.output, decimal_places=2)
+anzeige = ShowResult(formatiert.output)
+
+sc.add(netto, mwst, gerundet, formatiert, anzeige)
+save_shortcut(sc, "mwst_rechner.shortcut")
+```
+
 ### `Number`
 Erstellt eine Zahl.
 
@@ -440,6 +593,26 @@ Extrahiert Zahlen aus einem Text.
 
 ## Datum & Zeit
 
+**Beispiel:** Aktuelles Datum formatieren und das Datum von morgen berechnen:
+
+```python
+from shortcutspy import (
+    Shortcut, CurrentDate, FormatDate, AdjustDate,
+    ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Datum-Info")
+
+heute = FormatDate(CurrentDate(), format_string="EEEE, dd.MM.yyyy")
+morgen = AdjustDate(CurrentDate(), value=1, unit="Tage")
+morgen_fmt = FormatDate(morgen.output, format_string="dd.MM.yyyy")
+anzeige = ShowResult(heute.output)
+anzeige2 = ShowResult(morgen_fmt.output)
+
+sc.add(heute, morgen, morgen_fmt, anzeige, anzeige2)
+save_shortcut(sc, "datum_info.shortcut")
+```
+
 ### `Date`
 Erstellt ein Datum aus einem String.
 
@@ -520,6 +693,42 @@ Konvertiert ein Datum in eine andere Zeitzone.
 
 ## Listen & Wörterbücher
 
+**Beispiel 1:** Liste erstellen und Benutzer auswählen lassen:
+
+```python
+from shortcutspy import (
+    Shortcut, List, ChooseFromList, ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Favoriten-Wahl")
+
+optionen = List(items=["Python", "JavaScript", "Rust", "Go"])
+wahl = ChooseFromList(optionen.output, prompt="Deine Lieblingssprache?")
+anzeige = ShowResult(wahl.output)
+
+sc.add(optionen, wahl, anzeige)
+save_shortcut(sc, "favoriten.shortcut")
+```
+
+**Beispiel 2:** Dictionary erstellen und Wert auslesen:
+
+```python
+from shortcutspy import (
+    Shortcut, Dictionary, GetDictionaryValue, ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Config-Leser")
+
+config = Dictionary(items={"server": "api.example.com", "port": "443", "timeout": "30"})
+server = GetDictionaryValue(config.output, key="server")
+anzeige = ShowResult(server.output)
+
+sc.add(config, server, anzeige)
+save_shortcut(sc, "config_leser.shortcut")
+```
+
+> **Tipp:** `Dictionary` akzeptiert ein normales Python-Dict. Alle Werte sollten Strings sein, da Apple Shortcuts intern Strings verwendet.
+
 ### `List`
 Erstellt eine Liste aus festen Elementen.
 
@@ -599,6 +808,43 @@ Setzt oder überschreibt einen Wert in einem Wörterbuch.
 
 ## Web & URLs
 
+**Beispiel 1:** API-Aufruf mit Headern und JSON-Body:
+
+```python
+from shortcutspy import (
+    Shortcut, URL, DownloadURL, GetDictionaryValue,
+    ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Wetter-API")
+
+url = URL(url="https://api.example.com/weather")
+antwort = DownloadURL(
+    url.output,
+    method="GET",
+    headers={"Authorization": "Bearer DEIN_TOKEN", "Accept": "application/json"},
+)
+temperatur = GetDictionaryValue(antwort.output, key="temperature")
+anzeige = ShowResult(temperatur.output)
+
+sc.add(url, antwort, temperatur, anzeige)
+save_shortcut(sc, "wetter_api.shortcut")
+```
+
+**Beispiel 2:** URL öffnen:
+
+```python
+from shortcutspy import Shortcut, URL, OpenURL, save_shortcut
+
+sc = Shortcut("Webseite öffnen")
+
+url = URL(url="https://github.com")
+oeffnen = OpenURL(url.output)
+
+sc.add(url, oeffnen)
+save_shortcut(sc, "webseite.shortcut")
+```
+
 ### `URL`
 Erstellt ein URL-Objekt.
 
@@ -623,6 +869,8 @@ Lädt den Inhalt einer URL herunter (HTTP-Request).
 
 **Ausgabe:** Inhalt der URL  
 **Identifier:** `is.workflow.actions.downloadurl`
+
+> **Tipp:** Nutze `headers={"Authorization": "Bearer TOKEN"}` für authentifizierte API-Zugriffe. Für POST-Requests übergib den Body als Dict: `body={"key": "value"}`.
 
 ---
 
@@ -773,6 +1021,26 @@ Führt JavaScript auf einer geladenen Webseite aus.
 
 ## Dateien & Ordner
 
+**Beispiel:** Ordner erstellen, Datei speichern und wieder laden:
+
+```python
+from shortcutspy import (
+    Shortcut, Text, CreateFolder, SaveFile, GetFile,
+    ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Datei-Manager")
+
+ordner = CreateFolder(path="Shortcuts/MeinProjekt")
+inhalt = Text("Wichtige Notizen vom heutigen Tag.")
+speichern = SaveFile(inhalt.output, path="Shortcuts/MeinProjekt/notiz.txt", overwrite=True)
+laden = GetFile(path="Shortcuts/MeinProjekt/notiz.txt")
+anzeige = ShowResult(laden.output)
+
+sc.add(ordner, inhalt, speichern, laden, anzeige)
+save_shortcut(sc, "datei_manager.shortcut")
+```
+
 ### `GetFile`
 Liest eine Datei aus dem Dateisystem.
 
@@ -914,6 +1182,25 @@ Entpackt ein ZIP-Archiv.
 ---
 
 ## Bilder & Medien
+
+**Beispiel:** Foto aufnehmen, verkleinern und im Album speichern:
+
+```python
+from shortcutspy import (
+    Shortcut, TakePhoto, ResizeImage, SaveToPhotoAlbum,
+    Notification, save_shortcut,
+)
+
+sc = Shortcut("Foto-Verarbeitung")
+
+foto = TakePhoto()
+klein = ResizeImage(foto.output, width=800, height=0)
+speichern = SaveToPhotoAlbum(klein.output, album="Aufnahmen")
+hinweis = Notification(body="Foto verkleinert und gespeichert!", title="Fertig")
+
+sc.add(foto, klein, speichern, hinweis)
+save_shortcut(sc, "foto_verarbeitung.shortcut")
+```
 
 ### `TakePhoto`
 Öffnet die Kamera und nimmt ein Foto auf.
@@ -1132,6 +1419,23 @@ Schneidet ein Video interaktiv zu.
 
 ## PDF & Dokumente
 
+**Beispiel:** Text als PDF erstellen und Vorschau anzeigen:
+
+```python
+from shortcutspy import (
+    Shortcut, Text, MakePDF, PreviewDocument, save_shortcut,
+)
+
+sc = Shortcut("PDF-Ersteller")
+
+bericht = Text("Monatsbericht\n\nUmsatz: 12.500 €\nKosten: 8.200 €\nGewinn: 4.300 €")
+pdf = MakePDF(bericht.output)
+vorschau = PreviewDocument(pdf.output)
+
+sc.add(bericht, pdf, vorschau)
+save_shortcut(sc, "pdf_ersteller.shortcut")
+```
+
 ### `MakePDF`
 Erstellt ein PDF aus einem Dokument oder Bild.
 
@@ -1265,6 +1569,24 @@ Formatiert eine Dateigröße als lesbaren String (z. B. `"4,2 MB"`).
 
 ## Audio & Sprache
 
+**Beispiel:** Text übersetzen und vorlesen lassen:
+
+```python
+from shortcutspy import (
+    Shortcut, Text, TranslateText, SpeakText, ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Übersetzer mit Sprachausgabe")
+
+text = Text("Guten Morgen! Wie geht es Ihnen?")
+uebersetzung = TranslateText(text.output, to_language="en")
+anzeige = ShowResult(uebersetzung.output)
+vorlesen = SpeakText(uebersetzung.output)
+
+sc.add(text, uebersetzung, anzeige, vorlesen)
+save_shortcut(sc, "uebersetzer.shortcut")
+```
+
 ### `DictateText`
 Nimmt gesprochenen Text per Diktierfunktion auf.
 
@@ -1333,6 +1655,25 @@ Erkennt die Sprache eines Textes.
 
 ## Musik & Wiedergabe
 
+**Beispiel:** Aktuellen Song anzeigen und Lautstärke einstellen:
+
+```python
+from shortcutspy import (
+    Shortcut, GetCurrentSong, GetItemName, ShowResult,
+    SetVolume, save_shortcut,
+)
+
+sc = Shortcut("Musik-Info")
+
+song = GetCurrentSong()
+name = GetItemName(song.output)
+anzeige = ShowResult(name.output)
+lautstaerke = SetVolume(volume=0.7)
+
+sc.add(song, name, anzeige, lautstaerke)
+save_shortcut(sc, "musik_info.shortcut")
+```
+
 ### `PlayMusic`
 Spielt Musik aus der Mediathek ab.
 
@@ -1393,6 +1734,26 @@ Setzt die Systemlautstärke.
 ---
 
 ## Gerät & System
+
+**Beispiel:** Geräteinformationen sammeln und anzeigen:
+
+```python
+from shortcutspy import (
+    Shortcut, GetDeviceDetails, GetBatteryLevel, Text,
+    ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Geräte-Info")
+
+name = GetDeviceDetails(detail="Gerätename")
+modell = GetDeviceDetails(detail="Gerätemodell")
+akku = GetBatteryLevel()
+info = Text("Gerät: ")  # Textbausteine werden auf dem Gerät zusammengesetzt
+anzeige = ShowResult(akku.output)
+
+sc.add(name, modell, akku, info, anzeige)
+save_shortcut(sc, "geraete_info.shortcut")
+```
 
 ### `GetDeviceDetails`
 Liest ein Detail des aktuellen Geräts aus.
@@ -1555,6 +1916,22 @@ Liest den aktuell sichtbaren Bildschirminhalt aus.
 
 ## Standort & Karten
 
+**Beispiel:** Aktuellen Standort ermitteln und Navigation starten:
+
+```python
+from shortcutspy import (
+    Shortcut, GetCurrentLocation, GetDirections, save_shortcut,
+)
+
+sc = Shortcut("Weg nach Hause")
+
+standort = GetCurrentLocation()
+navigation = GetDirections(standort.output, mode="Fahren")
+
+sc.add(standort, navigation)
+save_shortcut(sc, "navigation.shortcut")
+```
+
 ### `GetCurrentLocation`
 Gibt den aktuellen GPS-Standort zurück.
 
@@ -1600,6 +1977,38 @@ Sucht nach einem Ort in der Karten-App.
 ---
 
 ## Kommunikation
+
+**Beispiel:** Nachricht mit dynamischem Inhalt senden:
+
+```python
+from shortcutspy import (
+    Shortcut, CurrentDate, FormatDate, Text, SendMessage,
+    save_shortcut,
+)
+
+sc = Shortcut("Tägliche Nachricht")
+
+datum = FormatDate(CurrentDate(), format_string="dd.MM.yyyy")
+text = Text(datum.output)
+nachricht = SendMessage(content=text.output, recipients=["+49 170 1234567"])
+
+sc.add(datum, text, nachricht)
+save_shortcut(sc, "taegliche_nachricht.shortcut")
+```
+
+**Beispiel 2:** E-Mail senden:
+
+```python
+from shortcutspy import Shortcut, SendEmail, Text, save_shortcut
+
+sc = Shortcut("Bericht senden")
+
+body = Text("Anbei der aktuelle Statusbericht.")
+email = SendEmail(to=["team@example.com"], subject="Wochenbericht", body=body.output)
+
+sc.add(body, email)
+save_shortcut(sc, "bericht_senden.shortcut")
+```
 
 ### `GetClipboard`
 Liest den aktuellen Inhalt der Zwischenablage.
@@ -1671,6 +2080,25 @@ Teilt einen Inhalt per AirDrop.
 
 ## Kalender & Erinnerungen
 
+**Beispiel:** Termin und Erinnerung erstellen:
+
+```python
+from shortcutspy import (
+    Shortcut, CurrentDate, AdjustDate, AddNewEvent,
+    AddReminder, Notification, save_shortcut,
+)
+
+sc = Shortcut("Termin-Planer")
+
+morgen = AdjustDate(CurrentDate(), value=1, unit="Tage")
+termin = AddNewEvent(title="Team-Meeting", start_date=morgen.output)
+erinnerung = AddReminder(title="Präsentation vorbereiten", list_name="Arbeit")
+hinweis = Notification(body="Termin und Erinnerung erstellt!", title="Erledigt")
+
+sc.add(morgen, termin, erinnerung, hinweis)
+save_shortcut(sc, "termin_planer.shortcut")
+```
+
 ### `AddNewEvent`
 Erstellt einen neuen Kalender-Termin.
 
@@ -1725,6 +2153,23 @@ Gibt bevorstehende Erinnerungen zurück.
 
 ## Kontakte
 
+**Beispiel:** Kontakt auswählen und Namen anzeigen:
+
+```python
+from shortcutspy import (
+    Shortcut, SelectContacts, GetItemName, ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Kontakt-Info")
+
+kontakt = SelectContacts()
+name = GetItemName(kontakt.output)
+anzeige = ShowResult(name.output)
+
+sc.add(kontakt, name, anzeige)
+save_shortcut(sc, "kontakt_info.shortcut")
+```
+
 ### `SelectContacts`
 Öffnet die Kontakte-App zur Auswahl.
 
@@ -1744,6 +2189,42 @@ Erstellt einen neuen Kontakt.
 ---
 
 ## Scripting & Automatisierung
+
+**Beispiel 1:** Shell-Skript ausführen und Ergebnis anzeigen:
+
+```python
+from shortcutspy import (
+    Shortcut, RunShellScript, ShowResult, save_shortcut,
+)
+
+sc = Shortcut("System-Info (macOS)")
+
+skript = RunShellScript(
+    script="echo \"CPU: $(sysctl -n machdep.cpu.brand_string)\"\necho \"RAM: $(sysctl -n hw.memsize)\"",
+    shell="/bin/zsh",
+)
+anzeige = ShowResult(skript.output)
+
+sc.add(skript, anzeige)
+save_shortcut(sc, "system_info.shortcut")
+```
+
+**Beispiel 2:** Anderen Shortcut aufrufen:
+
+```python
+from shortcutspy import (
+    Shortcut, Text, RunShortcut, ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Shortcut-Kette")
+
+eingabe = Text("Daten für den Sub-Shortcut")
+ergebnis = RunShortcut(name="Mein Hilfs-Shortcut", input=eingabe.output)
+anzeige = ShowResult(ergebnis.output)
+
+sc.add(eingabe, ergebnis, anzeige)
+save_shortcut(sc, "shortcut_kette.shortcut")
+```
 
 ### `RunShellScript`
 Führt ein Shell-Skript aus (macOS).
@@ -1798,6 +2279,8 @@ Führt ein Skript auf einem entfernten Server per SSH aus.
 **Ausgabe:** Shell-Skriptergebnis  
 **Identifier:** `is.workflow.actions.runsshscript`
 
+> **Tipp:** Nutze `RunSSHScript` für Remote-Server-Aufgaben wie Deployments oder Log-Abfragen. Für Produktion empfiehlt sich SSH-Key-Auth statt Passwort.
+
 ---
 
 ### `RunShortcut`
@@ -1826,6 +2309,25 @@ Ruft einen anderen Shortcut auf.
 ---
 
 ## Kodierung & Sicherheit
+
+**Beispiel:** Text Base64-codieren und einen Hash berechnen:
+
+```python
+from shortcutspy import (
+    Shortcut, Text, Base64Encode, Hash, ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Kodierung-Demo")
+
+text = Text("Geheime Nachricht")
+codiert = Base64Encode(text.output, mode="Codieren")
+anzeige1 = ShowResult(codiert.output)
+hash_wert = Hash(text.output, algorithm="SHA256")
+anzeige2 = ShowResult(hash_wert.output)
+
+sc.add(text, codiert, anzeige1, hash_wert, anzeige2)
+save_shortcut(sc, "kodierung_demo.shortcut")
+```
 
 ### `Base64Encode`
 Kodiert oder dekodiert Daten im Base64-Format.
@@ -1866,6 +2368,26 @@ Erstellt einen QR-Code aus einem Text.
 ---
 
 ## Hilfsprogramme
+
+**Beispiel:** Datei-Metadaten auslesen:
+
+```python
+from shortcutspy import (
+    Shortcut, GetFile, GetItemName, GetItemType,
+    FormatFileSize, ShowResult, save_shortcut,
+)
+
+sc = Shortcut("Datei-Metadaten")
+
+datei = GetFile(path="Shortcuts/dokument.pdf")
+name = GetItemName(datei.output)
+typ = GetItemType(datei.output)
+groesse = FormatFileSize(datei.output, format="Am nächsten")
+anzeige = ShowResult(name.output)
+
+sc.add(datei, name, typ, groesse, anzeige)
+save_shortcut(sc, "datei_meta.shortcut")
+```
 
 ### `GetItemName`
 Gibt den Namen eines Objekts zurück.
@@ -1931,6 +2453,49 @@ Konvertiert eine Messung in eine andere Einheit.
 ---
 
 ## Erweitert
+
+Diese Aktionen ermöglichen den Zugriff auf Shortcuts-Funktionalität, die nicht direkt als Klasse modelliert ist.
+
+**Beispiel 1:** `RawAction` für eine nicht modellierte Aktion:
+
+```python
+from shortcutspy import Shortcut, RawAction, ShowResult, save_shortcut
+
+sc = Shortcut("Raw-Action Demo")
+
+# Beliebige Shortcuts-Aktion über ihren Identifier ansprechen
+aktion = RawAction(
+    "is.workflow.actions.getipaddress",
+    output_name="IP-Adresse",
+)
+anzeige = ShowResult(aktion.output)
+
+sc.add(aktion, anzeige)
+save_shortcut(sc, "raw_demo.shortcut")
+```
+
+> **Tipp:** Nutze `RawAction`, wenn eine Apple-Shortcuts-Aktion noch nicht als eigene Klasse in ShortcutsPy existiert. Den Identifier findest du in der Shortcuts-App oder der Apple-Dokumentation.
+
+**Beispiel 2:** `AppIntentAction` für Drittanbieter-Apps:
+
+```python
+from shortcutspy import Shortcut, AppIntentAction, ShowResult, save_shortcut
+
+sc = Shortcut("App-Intent Demo")
+
+aktion = AppIntentAction(
+    identifier="com.example.myapp.intent",
+    bundle_id="com.example.myapp",
+    app_name="MeineApp",
+    team_id="ABC123DEF4",
+    intent_id="MeinIntent",
+    output_name="App-Ergebnis",
+)
+anzeige = ShowResult(aktion.output)
+
+sc.add(aktion, anzeige)
+save_shortcut(sc, "app_intent_demo.shortcut")
+```
 
 ### `RawAction`
 Fallback-Aktion für Identifier, die nicht explizit modelliert sind.
