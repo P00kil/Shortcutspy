@@ -36,6 +36,7 @@ install_shortcut(shortcut, "hallo.shortcut")
 - [API-Referenz](#api-referenz)
 - [Wiki](#wiki)
 - [Projektstruktur](#projektstruktur)
+- [Decompiler](#decompiler)
 - [Beitragen](#beitragen)
 - [Disclaimer](#disclaimer)
 
@@ -49,7 +50,7 @@ install_shortcut(shortcut, "hallo.shortcut")
 
 ```bash
 cd ShortcutsPy
-pip install -e .
+pip install .
 ```
 
 **Voraussetzungen:**
@@ -263,9 +264,10 @@ install_shortcut(shortcut, "notiz.shortcut")
 Im `examples/`-Ordner befinden sich lauffaehige Beispiele:
 
 ```bash
-PYTHONPATH=. python examples/demo.py                   # Einfaches Hallo-Welt
-PYTHONPATH=. python examples/clipboard_helfer.py       # Menue mit Zwischenablage-Tools
-PYTHONPATH=. python examples/produktivitaets_hub.py    # 5 Optionen, Auto-Install
+python examples/demo.py                   # Einfaches Hallo-Welt
+python examples/clipboard_helfer.py       # Menue mit Zwischenablage-Tools
+python examples/produktivitaets_hub.py    # 5 Optionen, Auto-Install
+python examples/setup_assistent.py        # Einrichtungsassistent
 ```
 
 Oder ueber das Shell-Script:
@@ -390,6 +392,8 @@ Das ausfuehrliche **[Wiki](https://github.com/P00kil/Shortcutspy/wiki)** bietet 
 | [Installation & Setup](https://github.com/P00kil/Shortcutspy/wiki/Installation-&-Setup) | Schritt-fuer-Schritt Installationsanleitung |
 | [Getting Started](https://github.com/P00kil/Shortcutspy/wiki/Getting-Started) | Erstes Shortcut in 5 Minuten |
 | [Core Concepts](https://github.com/P00kil/Shortcutspy/wiki/Core-Concepts) | Actions, Outputs, Kontrollfluss im Detail |
+| [Aktionen](https://github.com/P00kil/Shortcutspy/wiki/Aktionen) | Vollstaendige Referenz aller 150+ Aktionen mit Beispielen |
+| [Decompiler](https://github.com/P00kil/Shortcutspy/wiki/Decompiler) | Bestehende .shortcut-Dateien in Python-Code umwandeln |
 | [FAQ](https://github.com/P00kil/Shortcutspy/wiki/FAQ) | Haeufig gestellte Fragen |
 | [Troubleshooting](https://github.com/P00kil/Shortcutspy/wiki/Troubleshooting) | Problemloesungen und Fehlersuche |
 
@@ -402,6 +406,7 @@ ShortcutsPy/
 ├── shortcutspy/
 │   ├── __init__.py          # Public API — alle Klassen und Funktionen
 │   ├── actions.py           # 150+ Action-Klassen (Text, URL, Ask, ...)
+│   ├── decompile.py         # Decompiler: .shortcut → Python-Code
 │   ├── export.py            # Export, Signierung und Installation
 │   ├── flow.py              # Kontrollfluss (If, Menu, Repeat)
 │   ├── shortcut.py          # Shortcut-Builder
@@ -413,7 +418,8 @@ ShortcutsPy/
 ├── examples/
 │   ├── demo.py              # Einfaches Hallo-Welt-Beispiel
 │   ├── clipboard_helfer.py  # Menue mit Zwischenablage-Tools
-│   └── produktivitaets_hub.py  # 5-Optionen Hub mit Auto-Install
+│   ├── produktivitaets_hub.py  # 5-Optionen Hub mit Auto-Install
+│   └── setup_assistent.py   # Einrichtungsassistent
 ├── automation/
 │   └── build_and_install.sh # Shell: Python-Script → Sign → Open
 ├── wiki/                    # Wiki-Seiten (auch auf GitHub Wiki)
@@ -434,6 +440,30 @@ ShortcutsPy/
 ├── README.md                # Diese Datei (Deutsch)
 └── README_EN.md             # Dokumentation (Englisch)
 ```
+
+---
+
+## Decompiler
+
+Du hast bereits eine `.shortcut`-Datei und moechtest den Code dafuer sehen? Der Decompiler wandelt bestehende Kurzbefehle in ShortcutsPy-Code um:
+
+```bash
+python shortcutspy/decompile.py mein_kurzbefehl.shortcut
+```
+
+### Ausgabe als Python-Datei
+
+```bash
+python shortcutspy/decompile.py mein_kurzbefehl.shortcut -o bearbeitet.py
+```
+
+### Rohe Plist-Struktur als JSON
+
+```bash
+python shortcutspy/decompile.py mein_kurzbefehl.shortcut --json
+```
+
+Der generierte Code kann direkt bearbeitet und wieder als `.shortcut` exportiert werden.
 
 ---
 
