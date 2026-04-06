@@ -142,7 +142,7 @@ ACTION_MAP: dict[str, tuple[str, dict[str, str]]] = {
     "is.workflow.actions.selectcontact":    ("SelectContact", {}),
 
     # Scripting
-    "is.workflow.actions.runshellscript":   ("RunShellScript", {"WFInput": "input", "Script": "script", "Shell": "shell", "WFShellScript": "script", "WFShellScriptShell": "shell", "WFShellScriptInputMode": "input_mode"}),
+    "is.workflow.actions.runshellscript":   ("RunShellScript", {"Input": "input", "Script": "script", "Shell": "shell", "InputMode": "input_mode", "RunAsRoot": "run_as_root", "WFInput": "input", "WFShellScript": "script", "WFShellScriptShell": "shell", "WFShellScriptInputMode": "input_mode"}),
     "is.workflow.actions.runapplescript":   ("RunAppleScript", {"WFInput": "input", "WFAppleScript": "script"}),
     "is.workflow.actions.runshortcut":      ("RunShortcut",  {"WFShortcutName": "name", "WFInput": "input"}),
     "is.workflow.actions.wait":             ("Wait",        {"WFDuration": "duration"}),

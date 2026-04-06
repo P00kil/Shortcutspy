@@ -1268,10 +1268,15 @@ class RunShellScript(Action):
     identifier = "is.workflow.actions.runshellscript"
     output_name = "Shell-Skriptergebnis"
 
-    def __init__(self, script: str = "", shell: str = "/bin/zsh", input: Any = None):
-        params: dict[str, Any] = {"WFShellScript": script, "WFShellScriptShell": shell}
+    def __init__(self, script: str = "", shell: str = "/bin/zsh", input: Any = None,
+                 input_mode: str = "to stdin", run_as_root: bool = False):
+        params: dict[str, Any] = {"Script": _resolve_text(script), "Shell": shell}
         if input is not None:
-            params["WFInput"] = _resolve(input)
+            params["Input"] = _resolve(input)
+        if input_mode != "to stdin":
+            params["InputMode"] = input_mode
+        if run_as_root:
+            params["RunAsRoot"] = True
         super().__init__(**params)
 
 
