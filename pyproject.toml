@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shortcutspy"
+version = "1.0.0"
+description = "Create Apple Shortcuts files from Python"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Kilian Handy" }
+]
+license = { text = "MIT" }
+keywords = ["shortcuts", "apple-shortcuts", "automation", "plist", "macos"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Utilities",
+  "Intended Audience :: Developers",
+  "Development Status :: 5 - Production/Stable",
+]
+
+[project.urls]
+Homepage = "https://github.com/P00kil/ShortcutsPy"
+Repository = "https://github.com/P00kil/ShortcutsPy"
+"Bug Tracker" = "https://github.com/P00kil/ShortcutsPy/issues"
+Wiki = "https://github.com/P00kil/ShortcutsPy/wiki"
+Changelog = "https://github.com/P00kil/ShortcutsPy/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "pytest-cov>=4.0",
+  "ruff>=0.4",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shortcutspy*"]
+
+# ──────────────────────────────────────────────
+# Ruff (linter + formatter)
+# ──────────────────────────────────────────────
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]
+
+# ──────────────────────────────────────────────
+# Pytest
+# ──────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+# ──────────────────────────────────────────────
+# Coverage
+# ──────────────────────────────────────────────
+[tool.coverage.run]
+source = ["shortcutspy"]
+omit = ["tests/*", "examples/*"]
+
+[tool.coverage.report]
+show_missing = true
