@@ -20,7 +20,13 @@ Hier sind Antworten auf Fragen, die Nutzer häufig stellen.
 
 ### F: Kann ich existierende Kurzbefehle bearbeiten?
 
-**A:** Nein, ShortcutsPy erstellt immer neue Kurzbefehle von Grund auf. Du kannst bestehende `.shortcut`-Dateien nicht laden und bearbeiten.
+**A:** Nicht direkt als laufendes Shortcut-Objekt im Framework. Du kannst aber bestehende `.shortcut`-Dateien mit dem Decompiler in ShortcutsPy-Code umwandeln, den Python-Code anpassen und den Kurzbefehl anschliessend neu exportieren.
+
+```bash
+python shortcutspy/decompile.py mein_kurzbefehl.shortcut -o bearbeitet.py
+```
+
+Danach kannst du `bearbeitet.py` erweitern und wieder als `.shortcut` erzeugen.
 
 ---
 
