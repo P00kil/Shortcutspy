@@ -1,8 +1,7 @@
 """Tests for control flow blocks."""
 
-import pytest
 
-from shortcutspy import Text, ShowResult
+from shortcutspy import ShowResult, Text
 from shortcutspy.flow import If, Menu, RepeatCount, RepeatEach
 
 

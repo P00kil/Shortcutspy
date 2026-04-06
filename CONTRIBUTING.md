@@ -27,7 +27,7 @@ Mit deiner Teilnahme erklaerst du dich damit einverstanden, diesen Kodex einzuha
 
 ## Wie kann ich beitragen?
 
-- 🐛 **Bugs melden** — Erstelle ein [Issue](https://github.com/P00kil/VS-Code/issues) mit einer klaren Beschreibung
+- 🐛 **Bugs melden** — Erstelle ein [Issue](https://github.com/P00kil/ShortcutsPy/issues) mit einer klaren Beschreibung
 - 💡 **Features vorschlagen** — Oeffne ein Issue mit dem Label `enhancement`
 - 📝 **Dokumentation verbessern** — Tippfehler, bessere Erklaerungen, neue Beispiele
 - 🔧 **Code beitragen** — Bug-Fixes, neue Actions, Verbesserungen
@@ -38,8 +38,8 @@ Mit deiner Teilnahme erklaerst du dich damit einverstanden, diesen Kodex einzuha
 
 ```bash
 # 1. Repository forken und klonen
-git clone https://github.com/<dein-username>/VS-Code.git
-cd VS-Code/ShortcutsPy
+git clone https://github.com/<dein-username>/ShortcutsPy.git
+cd ShortcutsPy
 
 # 2. Virtuelle Umgebung erstellen
 python -m venv .venv
@@ -100,7 +100,7 @@ Wir verwenden [Conventional Commits](https://www.conventionalcommits.org/):
 
 ## Issues melden
 
-Bitte nutze die [Issue-Templates](https://github.com/P00kil/VS-Code/issues/new/choose) und gib folgende Infos an:
+Bitte nutze die [Issue-Templates](https://github.com/P00kil/ShortcutsPy/issues/new/choose) und gib folgende Infos an:
 
 - **Python-Version** (`python --version`)
 - **macOS-Version** (falls relevant)

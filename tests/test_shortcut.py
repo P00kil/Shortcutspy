@@ -2,10 +2,8 @@
 
 import plistlib
 
-import pytest
-
-from shortcutspy import Shortcut, Text, ShowResult, Comment, Notification
-from shortcutspy.export import to_json, to_plist, save_shortcut, save_json
+from shortcutspy import Shortcut, ShowResult, Text
+from shortcutspy.export import save_json, save_shortcut, to_json, to_plist
 
 
 class TestShortcutBuilder:

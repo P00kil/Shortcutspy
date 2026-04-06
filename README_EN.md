@@ -2,7 +2,7 @@
 
 **Build, sign, and install Apple Shortcuts with Python.**
 
-[![CI](https://github.com/P00kil/VS-Code/actions/workflows/ci.yml/badge.svg)](https://github.com/P00kil/VS-Code/actions/workflows/ci.yml)
+[![CI](https://github.com/P00kil/ShortcutsPy/actions/workflows/ci.yml/badge.svg)](https://github.com/P00kil/ShortcutsPy/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
@@ -439,8 +439,8 @@ ShortcutsPy/
 
 Contributions are welcome! Please read the [contribution guidelines](CONTRIBUTING_EN.md) first.
 
-- 🐛 [Report a bug](https://github.com/P00kil/VS-Code/issues/new?template=bug_report.md)
-- 💡 [Suggest a feature](https://github.com/P00kil/VS-Code/issues/new?template=feature_request.md)
+- 🐛 [Report a bug](https://github.com/P00kil/ShortcutsPy/issues/new?template=bug_report.md)
+- 💡 [Suggest a feature](https://github.com/P00kil/ShortcutsPy/issues/new?template=feature_request.md)
 - 📖 [Code of Conduct](CODE_OF_CONDUCT.md)
 - 🔒 [Security Policy](SECURITY.md)
 

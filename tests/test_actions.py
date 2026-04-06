@@ -1,16 +1,11 @@
 """Tests for Shortcut actions."""
 
-import pytest
 
 from shortcutspy import (
-    Text,
-    ShowResult,
-    Ask,
     Alert,
+    Ask,
     Comment,
-    Notification,
-    URL,
-    Number,
+    Text,
 )
 from shortcutspy.types import ActionOutput
 

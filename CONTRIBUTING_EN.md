@@ -27,7 +27,7 @@ By participating, you agree to uphold this code.
 
 ## How Can I Contribute?
 
-- 🐛 **Report bugs** — Open an [issue](https://github.com/P00kil/VS-Code/issues) with a clear description
+- 🐛 **Report bugs** — Open an [issue](https://github.com/P00kil/ShortcutsPy/issues) with a clear description
 - 💡 **Suggest features** — Open an issue with the `enhancement` label
 - 📝 **Improve documentation** — Fix typos, better explanations, new examples
 - 🔧 **Contribute code** — Bug fixes, new actions, improvements
@@ -38,8 +38,8 @@ By participating, you agree to uphold this code.
 
 ```bash
 # 1. Fork and clone the repository
-git clone https://github.com/<your-username>/VS-Code.git
-cd VS-Code/ShortcutsPy
+git clone https://github.com/<your-username>/ShortcutsPy.git
+cd ShortcutsPy
 
 # 2. Create a virtual environment
 python -m venv .venv
@@ -100,7 +100,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ## Reporting Issues
 
-Please use the [issue templates](https://github.com/P00kil/VS-Code/issues/new/choose) and include:
+Please use the [issue templates](https://github.com/P00kil/ShortcutsPy/issues/new/choose) and include:
 
 - **Python version** (`python --version`)
 - **macOS version** (if relevant)

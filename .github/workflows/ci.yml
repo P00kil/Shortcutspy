@@ -3,16 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
-    paths:
-      - "ShortcutsPy/**"
   pull_request:
     branches: [main]
-    paths:
-      - "ShortcutsPy/**"
-
-defaults:
-  run:
-    working-directory: ShortcutsPy
 
 jobs:
   lint:
@@ -75,4 +67,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: ShortcutsPy/dist/
+          path: dist/

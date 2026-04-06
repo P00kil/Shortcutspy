@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📖 Wiki
-    url: https://github.com/P00kil/VS-Code/wiki
+    url: https://github.com/P00kil/ShortcutsPy/wiki
     about: Check the wiki for documentation and guides
   - name: ❓ FAQ
-    url: https://github.com/P00kil/VS-Code/wiki/FAQ
+    url: https://github.com/P00kil/ShortcutsPy/wiki/FAQ
     about: Frequently asked questions

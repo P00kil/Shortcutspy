@@ -35,5 +35,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - German and English documentation (README, Wiki)
 - MIT License
 
-[Unreleased]: https://github.com/P00kil/VS-Code/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/P00kil/VS-Code/releases/tag/v1.0.0
+[Unreleased]: https://github.com/P00kil/ShortcutsPy/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/P00kil/ShortcutsPy/releases/tag/v1.0.0

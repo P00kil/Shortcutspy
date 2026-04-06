@@ -4,7 +4,7 @@
 
 > **English?** → [README_EN.md](README_EN.md)
 
-[![CI](https://github.com/P00kil/VS-Code/actions/workflows/ci.yml/badge.svg)](https://github.com/P00kil/VS-Code/actions/workflows/ci.yml)
+[![CI](https://github.com/P00kil/ShortcutsPy/actions/workflows/ci.yml/badge.svg)](https://github.com/P00kil/ShortcutsPy/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
@@ -441,8 +441,8 @@ ShortcutsPy/
 
 Beitraege sind herzlich willkommen! Bitte lies zuerst die [Beitragsrichtlinien](CONTRIBUTING.md).
 
-- 🐛 [Bug melden](https://github.com/P00kil/VS-Code/issues/new?template=bug_report.md)
-- 💡 [Feature vorschlagen](https://github.com/P00kil/VS-Code/issues/new?template=feature_request.md)
+- 🐛 [Bug melden](https://github.com/P00kil/ShortcutsPy/issues/new?template=bug_report.md)
+- 💡 [Feature vorschlagen](https://github.com/P00kil/ShortcutsPy/issues/new?template=feature_request.md)
 - 📖 [Verhaltenskodex](CODE_OF_CONDUCT.md)
 - 🔒 [Sicherheitsrichtlinie](SECURITY.md)
 
