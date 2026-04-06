@@ -1,159 +1,157 @@
 # ShortcutsPy
 
-**Apple-Kurzbefehle mit Python programmieren, signieren und installieren.**
-
-> **English?** → [README_EN.md](README_EN.md)
+**Build, sign, and install Apple Shortcuts with Python.**
 
 [![CI](https://github.com/P00kil/ShortcutsPy/actions/workflows/ci.yml/badge.svg)](https://github.com/P00kil/ShortcutsPy/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
 
-ShortcutsPy ist ein Python-Framework, mit dem du Apple-Kurzbefehle komplett in Python schreiben kannst.
-Das Framework erzeugt daraus native `.shortcut`-Dateien, signiert sie automatisch ueber das macOS-CLI und
-oeffnet den Import-Dialog in der Kurzbefehle-App — alles mit einem einzigen Funktionsaufruf.
+ShortcutsPy is a Python framework that lets you write Apple Shortcuts entirely in Python.
+The framework generates native `.shortcut` files, signs them automatically via the macOS CLI, and
+opens the import dialog in the Shortcuts app — all with a single function call.
 
 ```python
 from shortcutspy import Shortcut, Text, ShowResult, install_shortcut
 
-shortcut = Shortcut("Hallo Welt")
-text = Text("Willkommen bei ShortcutsPy!")
+shortcut = Shortcut("Hello World")
+text = Text("Welcome to ShortcutsPy!")
 shortcut.add(text, ShowResult(text.output))
 
-install_shortcut(shortcut, "hallo.shortcut")
-# → Kurzbefehl wird gebaut, signiert und in der Kurzbefehle-App geoeffnet
+install_shortcut(shortcut, "hello.shortcut")
+# → Shortcut is built, signed and opened in the Shortcuts app
 ```
 
 ---
 
-## Inhaltsverzeichnis
+## Table of Contents
 
 - [Installation](#installation)
-- [Schnellstart](#schnellstart)
-- [Grundkonzepte](#grundkonzepte)
-- [Beispiele](#beispiele)
-- [Signierung](#signierung)
-- [API-Referenz](#api-referenz)
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+- [Examples](#examples)
+- [Signing](#signing)
+- [API Reference](#api-reference)
 - [Wiki](#wiki)
-- [Projektstruktur](#projektstruktur)
+- [Project Structure](#project-structure)
 - [Decompiler](#decompiler)
-- [Beitragen](#beitragen)
+- [Contributing](#contributing)
 - [Disclaimer](#disclaimer)
 
 ---
 
 ## Installation
 
-1. Repository klonen oder herunterladen
-2. Im Terminal in den Projektordner wechseln
-3. Paket installieren:
+1. Clone or download the repository
+2. Open a terminal and navigate to the project folder
+3. Install the package:
 
 ```bash
 cd ShortcutsPy
 pip install .
 ```
 
-**Voraussetzungen:**
-- **Python 3.10** oder neuer
-- **macOS** fuer Signierung und Import (das reine Erstellen von `.shortcut`-Dateien funktioniert auf allen Betriebssystemen)
+**Requirements:**
+- **Python 3.10** or newer
+- **macOS** for signing and import (creating `.shortcut` files works on any operating system)
 
 ---
 
-## Schnellstart
+## Quick Start
 
-### 1. Kurzbefehl bauen und direkt installieren
+### 1. Build and install a shortcut directly
 
-Der einfachste Weg: Kurzbefehl definieren und mit `install_shortcut()` in einem Schritt bauen, signieren und in der Kurzbefehle-App oeffnen.
+The easiest way: define a shortcut and use `install_shortcut()` to build, sign, and open it in the Shortcuts app in one step.
 
 ```python
 from shortcutspy import Shortcut, Text, Notification, install_shortcut
 
-# 1. Neuen Kurzbefehl erstellen
-shortcut = Shortcut("Meine Nachricht")
+# 1. Create a new shortcut
+shortcut = Shortcut("My Message")
 
-# 2. Eine Text-Aktion hinzufuegen
-text = Text("Das hat funktioniert!")
+# 2. Create a text action
+text = Text("It worked!")
 
-# 3. Text und Benachrichtigung zum Kurzbefehl hinzufuegen
+# 3. Add the text and a notification to the shortcut
 shortcut.add(
     text,
     Notification(body=text.output, title="ShortcutsPy"),
 )
 
-# 4. Bauen, signieren und in der Kurzbefehle-App oeffnen
-install_shortcut(shortcut, "nachricht.shortcut")
+# 4. Build, sign, and open in the Shortcuts app
+install_shortcut(shortcut, "message.shortcut")
 ```
 
-### 2. Nur als Datei exportieren (ohne Installation)
+### 2. Export as file only (without installation)
 
-Falls du die Datei nur erzeugen willst, ohne sie zu signieren oder zu oeffnen:
+If you just want to create the file without signing or opening it:
 
 ```python
 from shortcutspy import Shortcut, Text, save_shortcut, save_json
 
-shortcut = Shortcut("Export-Test")
-shortcut.add(Text("Fertig"))
+shortcut = Shortcut("Export Test")
+shortcut.add(Text("Done"))
 
-save_shortcut(shortcut, "test.shortcut")   # Binary-Plist (.shortcut-Datei)
-save_json(shortcut, "test.json")           # JSON-Datei zum Debuggen
+save_shortcut(shortcut, "test.shortcut")   # Binary plist (.shortcut file)
+save_json(shortcut, "test.json")           # JSON file for debugging
 ```
 
 ---
 
-## Grundkonzepte
+## Core Concepts
 
-### Actions und Outputs
+### Actions and Outputs
 
-Jede Aktion (z.B. `Text`, `Ask`, `GetClipboard`) liefert ein `.output`-Objekt zurueck.
-Dieses Output kannst du direkt an andere Aktionen weitergeben — genau wie in der Kurzbefehle-App,
-wo du den Output einer Aktion in die naechste ziehst.
+Every action (e.g. `Text`, `Ask`, `GetClipboard`) returns an `.output` object.
+You can pass this output directly to other actions — just like in the Shortcuts app,
+where you drag an action's output into the next one.
 
 ```python
-text = Text("Hallo Welt")
-ShowResult(text.output)   # zeigt "Hallo Welt" an
+text = Text("Hello World")
+ShowResult(text.output)   # displays "Hello World"
 ```
 
-### Text-Parameter
+### Text Parameters
 
-Textparameter (z.B. `body`, `title`) akzeptieren sowohl einfache Strings als auch Action-Outputs.
-Outputs werden automatisch in das Shortcuts-Token-Format umgewandelt:
+Text parameters (e.g. `body`, `title`) accept both plain strings and action outputs.
+Outputs are automatically converted to the Shortcuts token format:
 
 ```python
-text = Text("Build erfolgreich")
+text = Text("Build successful")
 Notification(body=text.output, title="Status")
-# → Die Notification zeigt den Inhalt der Text-Aktion als Body an
+# → The notification displays the content of the Text action as the body
 ```
 
-### Kontrollfluss
+### Control Flow
 
-Fuer Bedingungen, Menues und Schleifen gibt es Bloecke, die wie in der Kurzbefehle-App verschachtelt werden:
+For conditionals, menus, and loops, there are blocks that can be nested just like in the Shortcuts app:
 
-| Block | Beschreibung | Beispiel |
+| Block | Description | Example |
 |-------|-------------|---------|
-| `If` | Bedingung mit Then/Otherwise | `If(input, condition=100).then(...).otherwise(...)` |
-| `Menu` | Auswahlmenue mit mehreren Optionen | `Menu(prompt="Wahl").option("A", ...).option("B", ...)` |
-| `RepeatCount` | Zaehler-Schleife (n Wiederholungen) | `RepeatCount(5).body(...)` |
-| `RepeatEach` | For-Each-Schleife ueber eine Liste | `RepeatEach(list.output).body(...)` |
+| `If` | Conditional with Then/Otherwise | `If(input, condition=100).then(...).otherwise(...)` |
+| `Menu` | Selection menu with multiple options | `Menu(prompt="Pick").option("A", ...).option("B", ...)` |
+| `RepeatCount` | Counter loop (n repetitions) | `RepeatCount(5).body(...)` |
+| `RepeatEach` | For-each loop over a list | `RepeatEach(list.output).body(...)` |
 
-### Variablen
+### Variables
 
-Du kannst benannte Variablen verwenden, um Werte zwischen Aktionen zu speichern und spaeter abzurufen:
+You can use named variables to store values between actions and retrieve them later:
 
 ```python
 from shortcutspy import SetVariable, GetVariable, AppendVariable
 
-SetVariable("mein_wert", input=text.output)   # Wert speichern
-GetVariable("mein_wert")                       # Wert abrufen
-AppendVariable("sammlung", input=text.output)  # An Liste anhaengen
+SetVariable("my_value", input=text.output)   # Store a value
+GetVariable("my_value")                       # Retrieve a value
+AppendVariable("collection", input=text.output)  # Append to a list
 ```
 
 ---
 
-## Beispiele
+## Examples
 
-### API-Abfrage mit If/Else
+### API Request with If/Else
 
-Dieses Beispiel ruft Daten von einer API ab und zeigt je nach Ergebnis unterschiedliche Meldungen an:
+This example fetches data from an API and shows different messages depending on the result:
 
 ```python
 from shortcutspy import (
@@ -161,29 +159,29 @@ from shortcutspy import (
     Shortcut, ShowResult, URL, install_shortcut,
 )
 
-shortcut = Shortcut("Wetter Check")
+shortcut = Shortcut("Weather Check")
 
-# URL festlegen und Daten herunterladen
+# Set URL and download data
 url = URL("https://api.example.com/weather?city=Berlin")
 response = DownloadURL(url.output)
 
-# Temperatur aus der JSON-Antwort holen
+# Extract temperature from the JSON response
 temp = GetDictionaryValue(response.output, key="temperature")
 
-# Bedingung: wenn Temperatur vorhanden, anzeigen — sonst Fehlermeldung
+# Condition: if temperature exists, display it — otherwise show error
 check = If(temp.output, condition=100).then(
     ShowResult(temp.output),
 ).otherwise(
-    Alert("Fehler", message="Keine Daten verfuegbar"),
+    Alert("Error", message="No data available"),
 )
 
 shortcut.add(url, response, temp, check)
-install_shortcut(shortcut, "wetter.shortcut")
+install_shortcut(shortcut, "weather.shortcut")
 ```
 
-### Menue mit mehreren Optionen
+### Menu with Multiple Options
 
-Ein Auswahlmenue, das verschiedene Aktionen anbietet:
+A selection menu offering different actions:
 
 ```python
 from shortcutspy import (
@@ -191,29 +189,29 @@ from shortcutspy import (
     TakePhoto, TakeScreenshot, install_shortcut,
 )
 
-shortcut = Shortcut("Schnellaktionen")
+shortcut = Shortcut("Quick Actions")
 clipboard = GetClipboard()
 
-# Menue mit drei Optionen erstellen
-menu = Menu(prompt="Was moechtest du tun?").option(
-    "Foto aufnehmen",
+# Create a menu with three options
+menu = Menu(prompt="What would you like to do?").option(
+    "Take Photo",
     TakePhoto(),
 ).option(
     "Screenshot",
     TakeScreenshot(),
 ).option(
-    "Zwischenablage anzeigen",
+    "Show Clipboard",
     clipboard,
     ShowResult(clipboard.output),
 )
 
 shortcut.add(menu)
-install_shortcut(shortcut, "schnellaktionen.shortcut")
+install_shortcut(shortcut, "quickactions.shortcut")
 ```
 
-### Schleife ueber eine Liste
+### Loop Over a List
 
-Text zeilenweise aufteilen, jede Zeile sammeln und am Ende zusammenfuegen:
+Split text into lines, collect each line, and combine them at the end:
 
 ```python
 from shortcutspy import (
@@ -221,56 +219,56 @@ from shortcutspy import (
     RepeatEach, Shortcut, ShowResult, SplitText, install_shortcut,
 )
 
-shortcut = Shortcut("Zeilen sammeln")
+shortcut = Shortcut("Collect Lines")
 
-# Zwischenablage holen und in Zeilen aufteilen
+# Get clipboard and split into lines
 clipboard = GetClipboard()
-lines = SplitText(clipboard.output, separator="Neue Zeile")
+lines = SplitText(clipboard.output, separator="New Line")
 
-# Jede Zeile in einer Variablen sammeln
+# Collect each line in a variable
 loop = RepeatEach(lines.output).body(
-    AppendVariable("zeilen", input=lines.output),
+    AppendVariable("lines", input=lines.output),
 )
 
-# Gesammelte Zeilen wieder zusammenfuegen und anzeigen
-result = GetVariable("zeilen")
+# Combine collected lines and display
+result = GetVariable("lines")
 combined = CombineText(result.output, separator="\n")
 shortcut.add(clipboard, lines, loop, result, combined, ShowResult(combined.output))
-install_shortcut(shortcut, "zeilen.shortcut")
+install_shortcut(shortcut, "lines.shortcut")
 ```
 
-### Benutzereingabe mit Ask
+### User Input with Ask
 
-Fragt den Benutzer nach einer Eingabe und speichert sie in der Zwischenablage:
+Asks the user for input and saves it to the clipboard:
 
 ```python
 from shortcutspy import Ask, Notification, Shortcut, SetClipboard, install_shortcut
 
-shortcut = Shortcut("Schnellnotiz")
+shortcut = Shortcut("Quick Note")
 
-# Eingangsfrage anzeigen
-eingabe = Ask(question="Was moechtest du notieren?")
+# Show input prompt
+input_action = Ask(question="What would you like to note?")
 
 shortcut.add(
-    eingabe,
-    SetClipboard(eingabe.output),                               # In Zwischenablage kopieren
-    Notification(body="In Zwischenablage kopiert!", title="Notiz"),  # Bestaetigung anzeigen
+    input_action,
+    SetClipboard(input_action.output),                               # Copy to clipboard
+    Notification(body="Copied to clipboard!", title="Note"),         # Show confirmation
 )
-install_shortcut(shortcut, "notiz.shortcut")
+install_shortcut(shortcut, "note.shortcut")
 ```
 
-### Fertige Beispiel-Scripts
+### Ready-to-Run Example Scripts
 
-Im `examples/`-Ordner befinden sich lauffaehige Beispiele:
+The `examples/` folder contains working examples you can run directly:
 
 ```bash
-python examples/demo.py                   # Einfaches Hallo-Welt
-python examples/clipboard_helfer.py       # Menue mit Zwischenablage-Tools
-python examples/produktivitaets_hub.py    # 5 Optionen, Auto-Install
-python examples/setup_assistent.py        # Einrichtungsassistent
+python examples/demo.py                   # Simple hello world
+python examples/clipboard_helfer.py       # Menu with clipboard tools
+python examples/produktivitaets_hub.py    # 5 options, auto-install
+python examples/setup_assistent.py        # Setup assistant
 ```
 
-Oder ueber das Shell-Script:
+Or via the shell script:
 
 ```bash
 ./automation/build_and_install.sh examples/produktivitaets_hub.py
@@ -278,210 +276,207 @@ Oder ueber das Shell-Script:
 
 ---
 
-## Signierung
+## Signing
 
-Apple erlaubt den Import von `.shortcut`-Dateien nur, wenn diese signiert sind. ShortcutsPy nutzt dafuer das macOS-eigene `shortcuts sign`-CLI.
+Apple only allows importing `.shortcut` files that have been signed. ShortcutsPy uses the built-in macOS `shortcuts sign` CLI for this.
 
-### All-in-one (empfohlen)
+### All-in-one (recommended)
 
 ```python
-# Baut die .shortcut-Datei, signiert sie und oeffnet die Kurzbefehle-App
-install_shortcut(shortcut, "mein_kurzbefehl.shortcut")
+# Builds the .shortcut file, signs it, and opens the Shortcuts app
+install_shortcut(shortcut, "my_shortcut.shortcut")
 ```
 
-### Nur signieren (ohne oeffnen)
+### Sign only (without opening)
 
 ```python
 from shortcutspy import save_shortcut, sign_shortcut
 
-save_shortcut(shortcut, "mein.shortcut")
-sign_shortcut("mein.shortcut", "mein_signed.shortcut")
+save_shortcut(shortcut, "my.shortcut")
+sign_shortcut("my.shortcut", "my_signed.shortcut")
 ```
 
-### Signierungsmodi
+### Signing Modes
 
-| Modus | Beschreibung |
-|-------|-------------|
-| `anyone` | Jeder kann den Kurzbefehl importieren (Standard) |
-| `people-who-know-me` | Nur Kontakte koennen importieren |
+| Mode | Description |
+|------|-------------|
+| `anyone` | Anyone can import the shortcut (default) |
+| `people-who-know-me` | Only contacts can import |
 
-### Voraussetzungen fuer die Signierung
+### Requirements for Signing
 
-- **macOS Monterey** oder neuer
-- **Kurzbefehle-App** muss installiert sein
-- Du musst mit einer **Apple-ID** angemeldet sein
-- Auf nicht-macOS-Systemen erscheint eine klare Fehlermeldung (kein Absturz)
+- **macOS Monterey** or later
+- **Shortcuts app** must be installed
+- You must be signed in with an **Apple ID**
+- On non-macOS systems, a clear error message is shown (no crash)
 
 ---
 
-## API-Referenz
+## API Reference
 
-### Shortcut-Builder
+### Shortcut Builder
 
-| Funktion | Beschreibung |
+| Function | Description |
 |----------|-------------|
-| `Shortcut(name)` | Neuen Kurzbefehl mit dem angegebenen Namen erstellen |
-| `.add(*actions)` | Eine oder mehrere Aktionen zum Kurzbefehl hinzufuegen |
-| `.set_icon(color, glyph)` | Icon-Farbe und Glyph-Symbol des Kurzbefehls festlegen |
+| `Shortcut(name)` | Create a new shortcut with the given name |
+| `.add(*actions)` | Add one or more actions to the shortcut |
+| `.set_icon(color, glyph)` | Set the shortcut's icon color and glyph symbol |
 
-### Export und Installation
+### Export and Installation
 
-| Funktion | Beschreibung |
+| Function | Description |
 |----------|-------------|
-| `install_shortcut(shortcut, path)` | Erzeugt, signiert und oeffnet den Kurzbefehl in der App |
-| `save_shortcut(shortcut, path)` | Speichert eine unsignierte `.shortcut`-Datei (Binary-Plist) |
-| `sign_shortcut(input, output, mode)` | Signiert eine bestehende `.shortcut`-Datei |
-| `save_json(shortcut, path)` | Exportiert den Kurzbefehl als JSON-Datei |
-| `to_json(shortcut)` | Gibt den Kurzbefehl als JSON-String zurueck |
-| `to_plist(shortcut)` | Gibt den Kurzbefehl als Binary-Plist-Bytes zurueck |
+| `install_shortcut(shortcut, path)` | Creates, signs, and opens the shortcut in the app |
+| `save_shortcut(shortcut, path)` | Saves an unsigned `.shortcut` file (binary plist) |
+| `sign_shortcut(input, output, mode)` | Signs an existing `.shortcut` file |
+| `save_json(shortcut, path)` | Exports the shortcut as a JSON file |
+| `to_json(shortcut)` | Returns the shortcut as a JSON string |
+| `to_plist(shortcut)` | Returns the shortcut as binary plist bytes |
 
-### Kontrollfluss
+### Control Flow
 
-| Klasse | Beschreibung |
-|--------|-------------|
-| `If(input, condition).then(...).otherwise(...)` | Bedingte Verzweigung (wenn/dann/sonst) |
-| `Menu(prompt).option(titel, ...)` | Auswahlmenue mit beliebig vielen Optionen |
-| `RepeatCount(n).body(...)` | Zaehler-Schleife (fuehrt den Body n-mal aus) |
-| `RepeatEach(input).body(...)` | For-Each-Schleife (iteriert ueber eine Liste) |
+| Class | Description |
+|-------|-------------|
+| `If(input, condition).then(...).otherwise(...)` | Conditional branch (if/then/else) |
+| `Menu(prompt).option(title, ...)` | Selection menu with any number of options |
+| `RepeatCount(n).body(...)` | Counter loop (runs the body n times) |
+| `RepeatEach(input).body(...)` | For-each loop (iterates over a list) |
 
-### Typen und Referenzen
+### Types and References
 
-| Klasse | Beschreibung |
-|--------|-------------|
-| `action.output` | Referenz auf den Output einer Aktion — kann an andere Aktionen uebergeben werden |
-| `Variable(name)` | Benannte Variable zum Speichern und Abrufen von Werten |
-| `CurrentDate()` | Gibt das aktuelle Datum und die Uhrzeit als Token zurueck |
+| Class | Description |
+|-------|-------------|
+| `action.output` | Reference to an action's output — can be passed to other actions |
+| `Variable(name)` | Named variable for storing and retrieving values |
+| `CurrentDate()` | Returns the current date and time as a token |
 
-### Aktionen (150+)
+### Actions (150+)
 
-Das Framework bildet ueber 150 Apple-Shortcuts-Aktionen als Python-Klassen ab.
-Hier eine Uebersicht der wichtigsten Kategorien:
+The framework maps over 150 Apple Shortcuts actions as Python classes.
+Here is an overview of the main categories:
 
-| Kategorie | Beispiele |
-|-----------|----------|
+| Category | Examples |
+|----------|----------|
 | **Text** | `Text`, `SplitText`, `CombineText`, `ReplaceText`, `ChangeCase` |
-| **Eingabe** | `Ask`, `ChooseFromList`, `Alert`, `Notification`, `ShowResult` |
-| **Zahlen** | `Number`, `RandomNumber`, `Calculate`, `Round` |
-| **Datum** | `Date`, `FormatDate`, `AdjustDate`, `TimeBetweenDates` |
-| **Listen** | `List`, `GetItemFromList`, `Dictionary`, `GetDictionaryValue` |
+| **Input** | `Ask`, `ChooseFromList`, `Alert`, `Notification`, `ShowResult` |
+| **Numbers** | `Number`, `RandomNumber`, `Calculate`, `Round` |
+| **Date** | `Date`, `FormatDate`, `AdjustDate`, `TimeBetweenDates` |
+| **Lists** | `List`, `GetItemFromList`, `Dictionary`, `GetDictionaryValue` |
 | **Web** | `URL`, `DownloadURL`, `SearchWeb`, `OpenURL` |
-| **Dateien** | `GetFile`, `SaveFile`, `DeleteFile`, `Zip` |
-| **Bilder** | `TakePhoto`, `ResizeImage`, `CropImage`, `ConvertImage` |
+| **Files** | `GetFile`, `SaveFile`, `DeleteFile`, `Zip` |
+| **Images** | `TakePhoto`, `ResizeImage`, `CropImage`, `ConvertImage` |
 | **PDF** | `MakePDF`, `GetTextFromPDF`, `SplitPDF` |
-| **Medien** | `PlayMusic`, `RecordAudio`, `EncodeMedia` |
-| **Geraet** | `GetDeviceDetails`, `GetBatteryLevel`, `SetBrightness` |
-| **Standort** | `GetCurrentLocation`, `GetDistance`, `GetDirections` |
-| **Kalender** | `AddNewEvent`, `GetUpcomingEvents`, `AddReminder` |
+| **Media** | `PlayMusic`, `RecordAudio`, `EncodeMedia` |
+| **Device** | `GetDeviceDetails`, `GetBatteryLevel`, `SetBrightness` |
+| **Location** | `GetCurrentLocation`, `GetDistance`, `GetDirections` |
+| **Calendar** | `AddNewEvent`, `GetUpcomingEvents`, `AddReminder` |
 | **Sharing** | `SetClipboard`, `GetClipboard`, `Share`, `SendMessage` |
 | **Scripting** | `RunShellScript`, `RunAppleScript`, `RunShortcut` |
-| **Variablen** | `SetVariable`, `GetVariable`, `AppendVariable` |
+| **Variables** | `SetVariable`, `GetVariable`, `AppendVariable` |
 
-**Nicht abgedeckte Aktionen?** Kein Problem:
-- `RawAction(identifier, ...)` — fuer jede Apple-Aktion ueber ihren internen Identifier
-- `AppIntentAction(...)` — fuer Drittanbieter-App-Intents
+**Missing an action?** No problem:
+- `RawAction(identifier, ...)` — for any Apple action via its internal identifier
+- `AppIntentAction(...)` — for third-party app intents
 
 ---
 
 ## Wiki
 
-Das ausfuehrliche **[Wiki](https://github.com/P00kil/Shortcutspy/wiki)** bietet zusaetzliche Anleitungen und Referenzen:
+The comprehensive **[Wiki](https://github.com/P00kil/Shortcutspy/wiki)** provides additional guides and references:
 
-| Seite | Inhalt |
-|-------|--------|
-| [Home](https://github.com/P00kil/Shortcutspy/wiki) | Startseite und Uebersicht |
-| [Installation & Setup](https://github.com/P00kil/Shortcutspy/wiki/Installation-&-Setup) | Schritt-fuer-Schritt Installationsanleitung |
-| [Getting Started](https://github.com/P00kil/Shortcutspy/wiki/Getting-Started) | Erstes Shortcut in 5 Minuten |
-| [Core Concepts](https://github.com/P00kil/Shortcutspy/wiki/Core-Concepts) | Actions, Outputs, Kontrollfluss im Detail |
-| [Aktionen](https://github.com/P00kil/Shortcutspy/wiki/Aktionen) | Vollstaendige Referenz aller 150+ Aktionen mit Beispielen |
-| [Decompiler](https://github.com/P00kil/Shortcutspy/wiki/Decompiler) | Bestehende .shortcut-Dateien in Python-Code umwandeln |
-| [FAQ](https://github.com/P00kil/Shortcutspy/wiki/FAQ) | Haeufig gestellte Fragen |
-| [Troubleshooting](https://github.com/P00kil/Shortcutspy/wiki/Troubleshooting) | Problemloesungen und Fehlersuche |
+| Page | Content |
+|------|--------|
+| [Home](https://github.com/P00kil/Shortcutspy/wiki) | Landing page and overview |
+| [Installation & Setup](https://github.com/P00kil/Shortcutspy/wiki/Installation-&-Setup) | Step-by-step installation guide |
+| [Getting Started](https://github.com/P00kil/Shortcutspy/wiki/Getting-Started) | Your first shortcut in 5 minutes |
+| [Core Concepts](https://github.com/P00kil/Shortcutspy/wiki/Core-Concepts) | Actions, outputs, control flow in detail |
+| [Decompiler](https://github.com/P00kil/Shortcutspy/wiki/Decompiler) | Convert existing .shortcut files into Python code |
+| [FAQ](https://github.com/P00kil/Shortcutspy/wiki/FAQ) | Frequently asked questions |
+| [Troubleshooting](https://github.com/P00kil/Shortcutspy/wiki/Troubleshooting) | Problem solving and error diagnosis |
 
 ---
 
-## Projektstruktur
+## Project Structure
 
 ```
 ShortcutsPy/
 ├── shortcutspy/
-│   ├── __init__.py          # Public API — alle Klassen und Funktionen
-│   ├── actions.py           # 150+ Action-Klassen (Text, URL, Ask, ...)
-│   ├── decompile.py         # Decompiler: .shortcut → Python-Code
-│   ├── export.py            # Export, Signierung und Installation
-│   ├── flow.py              # Kontrollfluss (If, Menu, Repeat)
-│   ├── shortcut.py          # Shortcut-Builder
+│   ├── __init__.py          # Public API — all classes and functions
+│   ├── actions.py           # 150+ action classes (Text, URL, Ask, ...)
+│   ├── decompile.py         # Decompiler: .shortcut → Python code
+│   ├── export.py            # Export, signing, and installation
+│   ├── flow.py              # Control flow (If, Menu, Repeat)
+│   ├── shortcut.py          # Shortcut builder
 │   └── types.py             # ActionOutput, Variable, CurrentDate
 ├── tests/
-│   ├── test_shortcut.py     # Tests fuer den Shortcut-Builder und Export
-│   ├── test_actions.py      # Tests fuer alle Action-Klassen
-│   └── test_flow.py         # Tests fuer Kontrollfluss-Bloecke
+│   ├── test_shortcut.py     # Tests for the Shortcut builder and export
+│   ├── test_actions.py      # Tests for all action classes
+│   └── test_flow.py         # Tests for control flow blocks
 ├── examples/
-│   ├── demo.py              # Einfaches Hallo-Welt-Beispiel
-│   ├── clipboard_helfer.py  # Menue mit Zwischenablage-Tools
-│   ├── produktivitaets_hub.py  # 5-Optionen Hub mit Auto-Install
-│   └── setup_assistent.py   # Einrichtungsassistent
+│   ├── demo.py              # Simple hello world example
+│   ├── clipboard_helfer.py  # Menu with clipboard tools
+│   ├── produktivitaets_hub.py  # 5-option hub with auto-install
+│   └── setup_assistent.py   # Setup assistant
 ├── automation/
-│   └── build_and_install.sh # Shell: Python-Script → Sign → Open
-├── wiki/                    # Wiki-Seiten (auch auf GitHub Wiki)
+│   └── build_and_install.sh # Shell: Python script → Sign → Open
+├── wiki/                    # Wiki pages (also on GitHub Wiki)
 ├── .github/
 │   ├── workflows/ci.yml     # GitHub Actions CI (Lint, Test, Build)
-│   ├── ISSUE_TEMPLATE/      # Bug-Report und Feature-Request Templates
+│   ├── ISSUE_TEMPLATE/      # Bug report and feature request templates
 │   └── PULL_REQUEST_TEMPLATE.md
-├── pyproject.toml           # Paket-Konfiguration, Ruff, Pytest
-├── Makefile                 # Entwicklungs-Shortcuts (make test, make lint, ...)
-├── .editorconfig            # Editor-Einstellungen
-├── .pre-commit-config.yaml  # Pre-commit Hooks (Ruff)
-├── CHANGELOG.md             # Versionshistorie
-├── CONTRIBUTING.md          # Beitragsrichtlinien (Deutsch)
-├── CONTRIBUTING_EN.md       # Beitragsrichtlinien (Englisch)
-├── CODE_OF_CONDUCT.md       # Verhaltenskodex
-├── SECURITY.md              # Sicherheitsrichtlinie
-├── LICENSE                  # MIT-Lizenz
-├── README.md                # Diese Datei (Deutsch)
-└── README_EN.md             # Dokumentation (Englisch)
+├── pyproject.toml           # Package config, Ruff, Pytest
+├── Makefile                 # Dev shortcuts (make test, make lint, ...)
+├── .editorconfig            # Editor settings
+├── .pre-commit-config.yaml  # Pre-commit hooks (Ruff)
+├── CHANGELOG.md             # Version history
+├── CONTRIBUTING.md          # Contribution guidelines
+├── CODE_OF_CONDUCT.md       # Code of conduct
+├── SECURITY.md              # Security policy
+├── LICENSE                  # MIT License
+└── README.md                # This file
 ```
 
 ---
 
 ## Decompiler
 
-Du hast bereits eine `.shortcut`-Datei und moechtest den Code dafuer sehen? Der Decompiler wandelt bestehende Kurzbefehle in ShortcutsPy-Code um:
+Already have a `.shortcut` file and want to see the code? The decompiler converts existing shortcuts into ShortcutsPy code:
 
 ```bash
-python shortcutspy/decompile.py mein_kurzbefehl.shortcut
+python shortcutspy/decompile.py my_shortcut.shortcut
 ```
 
-### Ausgabe als Python-Datei
+### Output as Python file
 
 ```bash
-python shortcutspy/decompile.py mein_kurzbefehl.shortcut -o bearbeitet.py
+python shortcutspy/decompile.py my_shortcut.shortcut -o editable.py
 ```
 
-### Rohe Plist-Struktur als JSON
+### Raw plist structure as JSON
 
 ```bash
-python shortcutspy/decompile.py mein_kurzbefehl.shortcut --json
+python shortcutspy/decompile.py my_shortcut.shortcut --json
 ```
 
-Der generierte Code kann direkt bearbeitet und wieder als `.shortcut` exportiert werden.
+The generated code can be edited directly and exported again as a `.shortcut` file.
 
 ---
 
-## Beitragen
+## Contributing
 
-Beitraege sind herzlich willkommen! Bitte lies zuerst die [Beitragsrichtlinien](CONTRIBUTING.md).
+Contributions are welcome! Please read the [contribution guidelines](CONTRIBUTING.md) first.
 
-- 🐛 [Bug melden](https://github.com/P00kil/ShortcutsPy/issues/new?template=bug_report.md)
-- 💡 [Feature vorschlagen](https://github.com/P00kil/ShortcutsPy/issues/new?template=feature_request.md)
-- 📖 [Verhaltenskodex](CODE_OF_CONDUCT.md)
-- 🔒 [Sicherheitsrichtlinie](SECURITY.md)
+- 🐛 [Report a bug](https://github.com/P00kil/ShortcutsPy/issues/new?template=bug_report.md)
+- 💡 [Suggest a feature](https://github.com/P00kil/ShortcutsPy/issues/new?template=feature_request.md)
+- 📖 [Code of Conduct](CODE_OF_CONDUCT.md)
+- 🔒 [Security Policy](SECURITY.md)
 
 ---
 
 ## Disclaimer
 
-Dieses Projekt wird **"as is"** bereitgestellt, ohne jegliche Gewaehrleistung. Die Nutzung erfolgt auf eigenes Risiko. Der Autor uebernimmt keine Haftung fuer Schaeden, Datenverlust oder sonstige Folgen, die durch die Verwendung dieser Software entstehen.
+This project is provided **"as is"**, without warranty of any kind, express or implied. Use at your own risk. The author assumes no liability for damages, data loss, or any other consequences resulting from the use of this software.
 
-ShortcutsPy ist ein **inoffizielles** Community-Projekt und steht in keiner Verbindung zu Apple Inc. "Apple", "Shortcuts" und "Kurzbefehle" sind Marken der Apple Inc.
+ShortcutsPy is an **unofficial** community project and is not affiliated with Apple Inc. "Apple", "Shortcuts", and related trademarks are the property of Apple Inc.
 
-Lizenz: [MIT](LICENSE)
+License: [MIT](LICENSE)

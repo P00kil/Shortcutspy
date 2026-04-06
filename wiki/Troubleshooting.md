@@ -1,144 +1,143 @@
-# Troubleshooting: Häufige Probleme und Lösungen
+# Troubleshooting: Common Problems and Solutions
 
-Wenn du auf Probleme stösst, schau hier zuerst nach.
+If you run into problems, check here first.
 
-> **English?** → [Troubleshooting (EN)](Troubleshooting-EN)
 
 ---
 
-## Installation und Setup
+## Installation and Setup
 
 ### Problem: `pip: command not found`
 
-**Fehler:**
+**Error:**
 ```
 pip: command not found
 ```
 
-**Loesung:**
+**Solution:**
 ```bash
-# Versuche python -m pip
+# Try python -m pip
 python -m pip install -e .
 
-# Oder falls nur python3 vorhanden ist
+# Or if only python3 is available
 python3 -m pip install -e .
 ```
 
 ---
 
-### Problem: Berechtigungsfehler bei Installation
+### Problem: Permission error during installation
 
-**Fehler:**
+**Error:**
 ```
 Permission denied
 ```
 
-**Loesung 1: Virtual Environment nutzen (empfohlen)**
+**Solution 1: Use a virtual environment (recommended)**
 ```bash
 python -m venv venv
 source venv/bin/activate  # macOS/Linux
 pip install -e .
 ```
 
-**Loesung 2: User-Flag nutzen**
+**Solution 2: Use the user flag**
 ```bash
 pip install --user -e .
 ```
 
 ---
 
-### Problem: Falsche Python-Version
+### Problem: Wrong Python version
 
-**Fehler:**
+**Error:**
 ```
 TypeError: ... requires Python 3.10+
 ```
 
-**Loesung:**
+**Solution:**
 ```bash
-# Verifiziere die Python-Version
+# Verify the Python version
 python --version
 
-# Falls zu alt, installiere neuer Python oder nutze python3
+# If too old, install a newer Python or use python3
 python3 --version
 python3 -m pip install -e .
 ```
 
 ---
 
-## Laufzeitfehler
+## Runtime Errors
 
 ### Problem: `AttributeError: 'Shortcut' object has no attribute 'output'`
 
-**Fehler:**
+**Error:**
 ```python
-shortcut.add(Text("Hallo"))
-ShowResult(shortcut.output)  # ❌ Fehler!
+shortcut.add(Text("Hello"))
+ShowResult(shortcut.output)  # ❌ Error!
 ```
 
-**Erklaerung:** Ein `Shortcut` hat kein `.output`. Nur Aktionen haben `.output`.
+**Explanation:** A `Shortcut` has no `.output`. Only actions have `.output`.
 
-**Loesung:**
+**Solution:**
 ```python
-text = Text("Hallo")
+text = Text("Hello")
 shortcut.add(text)
-ShowResult(text.output)  # ✅ Richtig!
+ShowResult(text.output)  # ✅ Correct!
 ```
 
 ---
 
 ### Problem: `NameError: name 'Shortcut' is not defined`
 
-**Fehler:**
+**Error:**
 ```python
-shortcut = Shortcut("Hallo")  # ❌ NameError
+shortcut = Shortcut("Hello")  # ❌ NameError
 ```
 
-**Loesung:** Die Klasse muss importiert werden:
+**Solution:** The class must be imported:
 ```python
 from shortcutspy import Shortcut  # ✅
 
-shortcut = Shortcut("Hallo")
+shortcut = Shortcut("Hello")
 ```
 
 ---
 
 ### Problem: `TypeError: '.add()' takes at least 2 positional arguments`
 
-**Fehler:**
+**Error:**
 ```python
-shortcut.add()  # ❌ Keine Aktionen
+shortcut.add()  # ❌ No actions
 ```
 
-**Loesung:** Mindestens eine Aktion hinzufuegen:
+**Solution:** Add at least one action:
 ```python
-shortcut.add(Text("Hallo"))  # ✅
+shortcut.add(Text("Hello"))  # ✅
 ```
 
 ---
 
-## Signierung und Installation (macOS)
+## Signing and Installation (macOS)
 
 ### Problem: `shortcuts: command not found` (macOS)
 
-**Fehler:**
+**Error:**
 ```
 /bin/sh: shortcuts: command not found
 ```
 
-**Erklaerung:** Die `shortcuts` CLI ist nicht installiert oder nicht im PATH.
+**Explanation:** The `shortcuts` CLI is not installed or not in PATH.
 
-**Loesung 1: Verwende den vollstaendigen Pfad**
+**Solution 1: Use the full path**
 ```python
-# In export.py oder beim Aufruf
-# (wird intern bereits versucht)
+# In export.py or when calling
+# (already attempted internally)
 ```
 
-**Loesung 2: Installiere macOS Monterey oder neuer**
-- Die `shortcuts` CLI ist nur auf macOS Monterey (12.0) und neuer verfuegbar
-- Pruefen: `System Preferences → About → macOS Version`
+**Solution 2: Install macOS Monterey or newer**
+- The `shortcuts` CLI is only available on macOS Monterey (12.0) and newer
+- Check: `System Preferences → About → macOS Version`
 
-**Loesung 3: Signiere manuell**
+**Solution 3: Sign manually**
 ```bash
 /usr/bin/shortcuts sign -m anyone -i file.shortcut -o file_signed.shortcut
 open file_signed.shortcut
@@ -146,87 +145,87 @@ open file_signed.shortcut
 
 ---
 
-### Problem: Fehler beim Importieren in die Kurzbefehle-App
+### Problem: Error when importing into the Shortcuts app
 
-**Fehler:**
+**Error:**
 ```
 "file_signed.shortcut" cannot be opened
 ```
 
-oder
+or
 
 ```
 This shortcut couldn't be opened
 ```
 
-**Moegliche Ursachen:**
+**Possible causes:**
 
-1. **Nicht angemeldet:** Du bist nicht in den Systemeinstellungen mit einer Apple-ID angemeldet
-   - Loesung: Gehe zu System Preferences → Apple ID und melde dich an
+1. **Not signed in:** You are not signed in with an Apple ID in System Settings
+   - Solution: Go to System Preferences → Apple ID and sign in
 
-2. **Falsche macOS-Version:** Du hast macOS Sierra oder aelter
-   - Loesung: Upgrade auf macOS Monterey oder neuer
+2. **Wrong macOS version:** You have macOS Sierra or older
+   - Solution: Upgrade to macOS Monterey or newer
 
-3. **Datei ist beschaedigt:** Der Shortcut wurde nicht richtig erstellt oder signiert
-   - Loesung: Versuche die Datei zu loeschen und neu zu erstellen
+3. **File is corrupted:** The shortcut was not created or signed correctly
+   - Solution: Try deleting the file and recreating it
 
-4. **Falsche Signierung:** Die Datei wurde nicht signiert
-   - Loesung: Signiere manuell mit `shortcuts sign -m anyone -i file.shortcut`
+4. **Not signed:** The file was not signed
+   - Solution: Sign manually with `shortcuts sign -m anyone -i file.shortcut`
 
 ---
 
 ### Problem: "Shortcut couldn't be signed"
 
-**Fehler:**
+**Error:**
 ```
 Error Domain=... shortcuts couldn't be signed
 ```
 
-**Loesung:**
+**Solution:**
 
-1. **Stelle sicher, dass du mit Apple-ID angemeldet bist:**
+1. **Make sure you are signed in with an Apple ID:**
    ```bash
-   shortcuts list  # Directory Listing sollte funktionieren
+   shortcuts list  # Directory listing should work
    ```
 
-2. **Pruefen ob Kurzbefehle-App oeffnet:**
+2. **Check if the Shortcuts app opens:**
    ```bash
    open /Applications/Shortcuts.app
    ```
 
-3. **Versuche manuell zu signieren:**
+3. **Try signing manually:**
    ```bash
    shortcuts sign -m people-who-know-me -i file.shortcut -o file_signed.shortcut
    ```
 
 ---
 
-## Export und Datei-Fehler
+## Export and File Errors
 
 ### Problem: `FileNotFoundError: No such file or directory`
 
-**Fehler:**
+**Error:**
 ```
 FileNotFoundError: [Errno 2] No such file or directory: '/nonexistent/shortcut.shortcut'
 ```
 
-**Loesung:** Das Verzeichnis existiert nicht. Erstelle es zuerst:
+**Solution:** The directory does not exist. Create it first:
 ```python
 import os
-os.makedirs("meine_shortcuts", exist_ok=True)
-install_shortcut(shortcut, "meine_shortcuts/shortcut.shortcut")
+os.makedirs("my_shortcuts", exist_ok=True)
+install_shortcut(shortcut, "my_shortcuts/shortcut.shortcut")
 ```
 
 ---
 
-### Problem: Keine Schreibberechtigung
+### Problem: No write permission
 
-**Fehler:**
+**Error:**
 ```
 PermissionError: [Errno 13] Permission denied: '/root/shortcut.shortcut'
 ```
 
-**Loesung:** Schreibe in einen Ordner, auf den du Zugriff hast:
+**Solution:** Write to a folder you have access to:
 ```python
 import tempfile
 with tempfile.TemporaryDirectory() as tmpdir:
@@ -235,63 +234,63 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
 ---
 
-## Logik und Design-Fehler
+## Logic and Design Errors
 
-### Problem: Variablen funktionieren nicht wie erwartet
+### Problem: Variables don't work as expected
 
-**Fehler:**
+**Error:**
 ```python
 SetVariable("x", input=1)
-GetVariable("x")  # Gibt null zurueck
+GetVariable("x")  # Returns null
 ```
 
-**Erklaerung:** `SetVariable` speichert einen Wert, `GetVariable` holt ihn ab. Aber in Python wird das nicht automatisch "synchronisiert".
+**Explanation:** `SetVariable` stores a value, `GetVariable` retrieves it. But in Python this is not automatically "synchronized".
 
-**Loesung:** Verwende `.output`:
+**Solution:** Use `.output`:
 ```python
-x_var = SetVariable("x", input=Text("Hallo"))
+x_var = SetVariable("x", input=Text("Hello"))
 result = GetVariable("x")
 shortcut.add(x_var, result)
 ```
 
 ---
 
-### Problem: Actions werden in falscher Reihenfolge ausgefuehrt
+### Problem: Actions are executed in the wrong order
 
-**Fehler:**
+**Error:**
 ```python
 shortcut.add(
-    GetVariable("x"),  # ❌ wird ausgefuehrt BEVOR x gesetzt wird
+    GetVariable("x"),  # ❌ executed BEFORE x is set
     SetVariable("x", input=5),
 )
 ```
 
-**Loesung:** Setzen vor Abrufen:
+**Solution:** Set before retrieving:
 ```python
 shortcut.add(
-    SetVariable("x", input=5),  # ✅ Zuerst setzen
-    GetVariable("x"),           # Dann abrufen
+    SetVariable("x", input=5),  # ✅ Set first
+    GetVariable("x"),           # Then retrieve
 )
 ```
 
 ---
 
-## Schnelle Fehler-Checkliste
+## Quick Error Checklist
 
-Wenn etwas schiefgeht, pruefe:
+If something goes wrong, check:
 
-- [ ] **Ist ShortcutsPy installiert?** → `pip list | grep shortcutspy`
-- [ ] **Sind alle Importe vorhanden?** → `from shortcutspy import ...`
-- [ ] **Ist die Aktion an die richtige Variable zugewiesen?** → `text = Text(...)`
-- [ ] **Werden Aktionen zum Shortcut hinzugefuegt?** → `.add(...)`
-- [ ] **Sind die Namen der Variablen korrekt?** → Kleinbuchstaben beachten
-- [ ] **Werden auf dem Mac die Signierungsvoraussetzungen erfuellt?** → Apple-ID angemeldet?
-- [ ] **Ist der Pfad richtig?** → Verzeichnis existiert und ist beschreibbar?
+- [ ] **Is ShortcutsPy installed?** → `pip list | grep shortcutspy`
+- [ ] **Are all imports present?** → `from shortcutspy import ...`
+- [ ] **Is the action assigned to the correct variable?** → `text = Text(...)`
+- [ ] **Are actions added to the shortcut?** → `.add(...)`
+- [ ] **Are variable names correct?** → Watch for case sensitivity
+- [ ] **Are macOS signing requirements met?** → Signed in with Apple ID?
+- [ ] **Is the path correct?** → Directory exists and is writable?
 
 ---
 
-## Weitere Hilfe
+## More Help
 
-- **[FAQ](FAQ)** — Haeufig gestellte Fragen
-- **[GitHub Issues](https://github.com/P00kil/Shortcutspy/issues)** — Fehler melden oder Fragen stellen
-- **[Core Concepts](Core-Concepts)** — Grundkonzepte nochmal lesen
+- **[FAQ](FAQ)** — Frequently asked questions
+- **[GitHub Issues](https://github.com/P00kil/Shortcutspy/issues)** — Report bugs or ask questions
+- **[Core Concepts](Core-Concepts)** — Review the core concepts

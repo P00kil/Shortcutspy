@@ -3,7 +3,7 @@
 ## Projekt
 
 ShortcutsPy ist ein Python-Framework zum Erstellen von Apple Shortcuts aus Python-Code.
-Repo: `P00kil/ShortcutsPy` · Sprache: Deutsch (Code-Kommentare, Docs, Variablen).
+Repo: `P00kil/ShortcutsPy` · Language: English (docs), German (some variable names).
 
 ## Wichtige Erkenntnisse
 
@@ -56,4 +56,4 @@ for name, data in cursor.fetchall():
 
 - `/Users/kilianhandy/Documents/ShortcutsPy` – Haupt-Arbeitsverzeichnis (dieses Repo)
 - `/Users/kilianhandy/ShortcutsPy` – Ältere Kopie (hat `.venv` mit Python 3.14 + pyobjc)
-- `/Users/kilianhandy/Shortcutspy_Kopie` – Backup-Kopie
+- `/Users/kilianhandy/Shortcutspy_Kopie` – Backup-Kopie einer eventuell älteren Version

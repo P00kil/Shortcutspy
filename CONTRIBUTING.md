@@ -1,113 +1,112 @@
-# Beitragen zu ShortcutsPy
+# Contributing to ShortcutsPy
 
-> **English?** → [CONTRIBUTING_EN.md](CONTRIBUTING_EN.md)
 
-Vielen Dank, dass du zu ShortcutsPy beitragen moechtest! 🎉
-Hier findest du alles, was du wissen musst.
+Thank you for your interest in contributing to ShortcutsPy! 🎉
+Here's everything you need to know.
 
 ---
 
-## Inhaltsverzeichnis
+## Table of Contents
 
-- [Verhaltenskodex](#verhaltenskodex)
-- [Wie kann ich beitragen?](#wie-kann-ich-beitragen)
-- [Entwicklungsumgebung einrichten](#entwicklungsumgebung-einrichten)
-- [Code-Stil](#code-stil)
+- [Code of Conduct](#code-of-conduct)
+- [How Can I Contribute?](#how-can-i-contribute)
+- [Development Setup](#development-setup)
+- [Code Style](#code-style)
 - [Pull Requests](#pull-requests)
-- [Issues melden](#issues-melden)
+- [Reporting Issues](#reporting-issues)
 
 ---
 
-## Verhaltenskodex
+## Code of Conduct
 
-Dieses Projekt folgt dem [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
-Mit deiner Teilnahme erklaerst du dich damit einverstanden, diesen Kodex einzuhalten.
-
----
-
-## Wie kann ich beitragen?
-
-- 🐛 **Bugs melden** — Erstelle ein [Issue](https://github.com/P00kil/ShortcutsPy/issues) mit einer klaren Beschreibung
-- 💡 **Features vorschlagen** — Oeffne ein Issue mit dem Label `enhancement`
-- 📝 **Dokumentation verbessern** — Tippfehler, bessere Erklaerungen, neue Beispiele
-- 🔧 **Code beitragen** — Bug-Fixes, neue Actions, Verbesserungen
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+By participating, you agree to uphold this code.
 
 ---
 
-## Entwicklungsumgebung einrichten
+## How Can I Contribute?
+
+- 🐛 **Report bugs** — Open an [issue](https://github.com/P00kil/ShortcutsPy/issues) with a clear description
+- 💡 **Suggest features** — Open an issue with the `enhancement` label
+- 📝 **Improve documentation** — Fix typos, better explanations, new examples
+- 🔧 **Contribute code** — Bug fixes, new actions, improvements
+
+---
+
+## Development Setup
 
 ```bash
-# 1. Repository forken und klonen
-git clone https://github.com/<dein-username>/ShortcutsPy.git
+# 1. Fork and clone the repository
+git clone https://github.com/<your-username>/ShortcutsPy.git
 cd ShortcutsPy
 
-# 2. Virtuelle Umgebung erstellen
+# 2. Create a virtual environment
 python -m venv .venv
 source .venv/bin/activate
 
-# 3. Paket im Entwicklungsmodus installieren
+# 3. Install in development mode
 pip install -e ".[dev]"
 
-# 4. Tests ausfuehren
+# 4. Run tests
 pytest
 
-# 5. Linting pruefen
+# 5. Check linting
 ruff check shortcutspy/
 ```
 
 ---
 
-## Code-Stil
+## Code Style
 
-- **Python 3.10+** — Nutze moderne Type-Hints
-- **Formatierung** — [Ruff](https://docs.astral.sh/ruff/) als Formatter und Linter
-- **Docstrings** — Jede oeffentliche Klasse und Funktion braucht einen Docstring
-- **Sprache** — Code und Docstrings auf Englisch, Kommentare koennen Deutsch sein
+- **Python 3.10+** — Use modern type hints
+- **Formatting** — [Ruff](https://docs.astral.sh/ruff/) as formatter and linter
+- **Docstrings** — Every public class and function needs a docstring
+- **Language** — Code and docstrings in English
 
 ---
 
 ## Pull Requests
 
-1. Erstelle einen **Feature-Branch** von `main`:
+1. Create a **feature branch** from `main`:
    ```bash
-   git checkout -b feature/meine-aenderung
+   git checkout -b feature/my-change
    ```
-2. Mache deine Aenderungen und schreibe **Tests** dafuer
-3. Stelle sicher, dass alle Tests bestehen:
+2. Make your changes and write **tests** for them
+3. Make sure all tests pass:
    ```bash
    pytest
    ```
-4. Committe mit einer **aussagekraeftigen Nachricht**:
+4. Commit with a **meaningful message**:
    ```bash
-   git commit -m "feat: neue Action XY hinzugefuegt"
+   git commit -m "feat: add new action XY"
    ```
-5. Pushe und erstelle einen **Pull Request**
+5. Push and create a **Pull Request**
 
-### Commit-Konventionen
+### Commit Conventions
 
-Wir verwenden [Conventional Commits](https://www.conventionalcommits.org/):
+We use [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Prefix | Beschreibung |
+| Prefix | Description |
 |--------|-------------|
-| `feat:` | Neues Feature |
-| `fix:` | Bug-Fix |
-| `docs:` | Dokumentation |
-| `test:` | Tests hinzugefuegt/geaendert |
-| `refactor:` | Code-Refactoring |
-| `chore:` | Build, CI, Abhaengigkeiten |
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `docs:` | Documentation |
+| `test:` | Tests added/changed |
+| `refactor:` | Code refactoring |
+| `chore:` | Build, CI, dependencies |
 
 ---
 
-## Issues melden
+## Reporting Issues
 
-Bitte nutze die [Issue-Templates](https://github.com/P00kil/ShortcutsPy/issues/new/choose) und gib folgende Infos an:
+Please use the [issue templates](https://github.com/P00kil/ShortcutsPy/issues/new/choose) and include:
 
-- **Python-Version** (`python --version`)
-- **macOS-Version** (falls relevant)
-- **Schritte zum Reproduzieren**
-- **Erwartetes vs. tatsaechliches Verhalten**
-- **Fehlermeldung** (falls vorhanden)
+- **Python version** (`python --version`)
+- **macOS version** (if relevant)
+- **Steps to reproduce**
+- **Expected vs. actual behavior**
+- **Error message** (if any)
 
 ---
 
-Danke fuer deinen Beitrag! 🙏
+Thank you for contributing! 🙏

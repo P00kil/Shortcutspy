@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`
 - `CHANGELOG.md`
 - `.editorconfig` and `pre-commit` configuration
-- `Makefile` for common development tasks
+- Removed `Makefile` (use pyproject.toml scripts instead)
 
 ---
 

@@ -1,96 +1,95 @@
-# Core Concepts: Die Grundideen
+# Core Concepts: The Fundamentals
 
-Diese Seite erklaert die fundamentalen Konzepte hinter ShortcutsPy.
+This page explains the fundamental concepts behind ShortcutsPy.
 
-> **English?** → [Core Concepts (EN)](Core-Concepts-EN)
 
 ---
 
-## 1. Actions (Aktionen)
+## 1. Actions
 
-Eine **Action** ist eine Funktion, die der Kurzbefehl ausfuehrt. Beispiele:
-- `Text("Hallo")` — eine Text-Zeichenkette
-- `Ask(question="Name?")` — Benutzer fragen
-- `GetClipboard()` — Zwischenablage abrufen
-- `ShowResult(...)` — Ergebnis anzeigen
+An **Action** is a function that the shortcut executes. Examples:
+- `Text("Hello")` — a text string
+- `Ask(question="Name?")` — ask the user
+- `GetClipboard()` — get the clipboard contents
+- `ShowResult(...)` — display a result
 
 ```python
-text_action = Text("Hallo Welt")
-ask_action = Ask(question="Wie heisst du?")
+text_action = Text("Hello World")
+ask_action = Ask(question="What is your name?")
 ```
 
 ---
 
-## 2. ActionOutput (das Output einer Aktion)
+## 2. ActionOutput
 
-Jede Aktion liefert ein `.output` zurueck. Das ist eine **Referenz** auf das Ergebnis der Aktion.
+Every action returns an `.output`. This is a **reference** to the result of the action.
 
 ```python
-text = Text("Hallo")
+text = Text("Hello")
 print(text.output)  # <ActionOutput uuid='...' type='text'>
 ```
 
-Mit diesem Output kannst du den Wert an die naechste Aktion uebergeben:
+You can pass this output to the next action:
 
 ```python
-text = Text("Hallo")
+text = Text("Hello")
 notification = Notification(body=text.output, title="Greeting")
 
-# Die Notification zeigt das Ergebnis von 'text' an
+# The notification displays the result of 'text'
 ```
 
-Das ist wie wenn du in der Kurzbefehle-App den Output einer Aktion in die naechste ziehst:
+This is like dragging an action's output into the next one in the Shortcuts app:
 
 ```
 ┌──────────────┐
 │ Text         │
-│ "Hallo"      ├→ (Pfeil ziehen / Output uebergeben)
+│ "Hello"      ├→ (drag arrow / pass output)
 └──────────────┘
         ↓
 ┌──────────────────────────┐
 │ Notification             │
-│ body: (verlinkt zu Text) │
+│ body: (linked to Text)   │
 └──────────────────────────┘
 ```
 
 ---
 
-## 3. Shortcut (der Builder)
+## 3. Shortcut (the Builder)
 
-Ein `Shortcut` ist dein **Kurzbefehl-Projekt**. Es sammelt alle Aktionen.
+A `Shortcut` is your **shortcut project**. It collects all actions.
 
 ```python
-shortcut = Shortcut("Mein Kurzbefehl")
+shortcut = Shortcut("My Shortcut")
 ```
 
-Aktionen werden mit `.add()` hinzugefuegt:
+Actions are added with `.add()`:
 
 ```python
 shortcut.add(
-    Text("Schritt 1"),
-    Text("Schritt 2"),
-    Text("Schritt 3"),
+    Text("Step 1"),
+    Text("Step 2"),
+    Text("Step 3"),
 )
 ```
 
-Die Aktionen werden **in der Reihenfolge ausgefuehrt**, in der sie hinzugefuegt wurden.
+Actions are **executed in the order** they were added.
 
 ---
 
-## 4. Control Flow (Kontrollfluss)
+## 4. Control Flow
 
-Einfache `.add()` Sequenzen sind linear. Fuer komplexere Logik brauchst du **Bloecke**:
+Simple `.add()` sequences are linear. For more complex logic you need **blocks**:
 
 ### If/Else
 
 ```python
 check = If(
-    some_value,           # Eingabewert pruefen
-    condition=100         # Bedingung festlegen
+    some_value,           # check input value
+    condition=100         # set condition
 ).then(
-    Text("Value ist >= 100")
+    Text("Value is >= 100")
 ).otherwise(
-    Text("Value ist < 100")
+    Text("Value is < 100")
 )
 
 shortcut.add(check)
@@ -99,12 +98,12 @@ shortcut.add(check)
 ### Menu
 
 ```python
-menu = Menu(prompt="Waehle:").option(
+menu = Menu(prompt="Choose:").option(
     "Option A",
-    Text("A gewaehlt"),
+    Text("A selected"),
 ).option(
     "Option B",
-    Text("B gewaehlt"),
+    Text("B selected"),
 )
 
 shortcut.add(menu)
@@ -114,7 +113,7 @@ shortcut.add(menu)
 
 ```python
 loop = RepeatCount(5).body(
-    Text("Diese Zeile wiederholt sich 5-mal")
+    Text("This line repeats 5 times")
 )
 
 shortcut.add(loop)
@@ -123,9 +122,9 @@ shortcut.add(loop)
 ### RepeatEach
 
 ```python
-items = List(["Apfel", "Banane", "Kirsche"])
+items = List(["Apple", "Banana", "Cherry"])
 loop = RepeatEach(items.output).body(
-    Text("Item: (aktuelles Item)")  # wird fuer jedes Item ausgefuehrt
+    Text("Item: (current item)")  # runs for each item
 )
 
 shortcut.add(items, loop)
@@ -133,22 +132,22 @@ shortcut.add(items, loop)
 
 ---
 
-## 5. Variables (Variablen)
+## 5. Variables
 
-Mit Variablen kannst du Werte speichern und spaeter abrufen.
+With variables you can store values and retrieve them later.
 
 ```python
-# Wert speichern
+# Store a value
 set_var = SetVariable("name", input=Text("Alice"))
 
-# Wert abrufen
+# Retrieve the value
 get_var = GetVariable("name")
 result = ShowResult(get_var.output)
 
 shortcut.add(set_var, get_var, result)
 ```
 
-Das ist hilfreich in Schleifen:
+This is useful in loops:
 
 ```python
 count = SetVariable("counter", input=1)
@@ -160,56 +159,56 @@ shortcut.add(count, loop)
 
 ---
 
-## 6. Text Tokens (Text-Platzhalter)
+## 6. Text Tokens (Placeholders)
 
-Text-Parameter akzeptieren sowohl normale Strings als auch Action-Outputs:
+Text parameters accept both regular strings and action outputs:
 
 ```python
-# Einfacher String
-text1 = Text("Hallo")
+# Simple string
+text1 = Text("Hello")
 
-# Mit ActionOutput
-text2 = Text("Mein Name ist (ask.output)")
-# Das ist intern ein Token, das beim Ausfuehren ersetzt wird
+# With ActionOutput
+text2 = Text("My name is (ask.output)")
+# This is internally a token that gets replaced at runtime
 ```
 
-In der App sieht das so aus:
+In the app it looks like this:
 
 ```
-Text: "Mein Name ist [Ask-Output-Token]"
+Text: "My name is [Ask-Output-Token]"
 ```
 
-Beim Ausfuehren wird das Token durch den tatsaechlichen Wert ersetzt.
+At runtime, the token is replaced with the actual value.
 
 ---
 
-## 7. Das Zusammenspiel
+## 7. How It All Works Together
 
-So arbeiten die Konzepte zusammen:
+This is how the concepts work together:
 
 ```
 Shortcut
   ├─ Action 1: Ask(question="?")
-  │   └─ .output → (Benutzerantwort)
+  │   └─ .output → (user answer)
   │
   ├─ Action 2: If(.output > 10)
-  │   ├─ Then: Text("Gross")
-  │   └─ Else: Text("Klein")
+  │   ├─ Then: Text("Large")
+  │   └─ Else: Text("Small")
   │
   └─ Action 3: Notification(body=...)
-      └─ zeigt Ergebnis an
+      └─ shows the result
 ```
 
-Wenn der Kurzbefehl ausgefuehrt wird:
-1. Benutzer wird gefragt
-2. Die Antwort wird geprueft
-3. Je nach Ergebnis wird eine andere Benachrichtigung angezeigt
+When the shortcut runs:
+1. The user is asked a question
+2. The answer is checked
+3. Depending on the result, a different notification is shown
 
 ---
 
-## 8. Chaining (Verkettung)
+## 8. Chaining
 
-Du kannst mehrere Output-Referenzen hintereinander verketten:
+You can chain multiple output references one after another:
 
 ```python
 name = Ask(question="Name?")
@@ -219,44 +218,44 @@ result = ShowResult(uppercase.output)
 shortcut.add(name, uppercase, result)
 ```
 
-Ablauf:
-1. Name wird gefragt
-2. Das Ergebnis wird in GROSSBUCHSTABEN umgewandelt
-3. Das Endergebnis wird angezeigt
+Flow:
+1. Name is asked
+2. The result is converted to UPPERCASE
+3. The final result is displayed
 
 ---
 
-## 9. Reihenfolge ist wichtig
+## 9. Order Matters
 
-Aktionen werden **in der Reihenfolge** ausgefuehrt, in der sie eingefuegt werden:
+Actions are **executed in the order** they are added:
 
 ```python
-# ❌ Falsch
+# ❌ Wrong
 shortcut.add(
-    ShowResult(name.output),  # name noch nicht gesetzt!
+    ShowResult(name.output),  # name not set yet!
     Ask(question="Name?", variable_name="name"),
 )
 
-# ✅ Richtig
+# ✅ Correct
 shortcut.add(
-    Ask(question="Name?", variable_name="name"),  # zuerst fragen
-    ShowResult(name.output),                       # dann anzeigen
+    Ask(question="Name?", variable_name="name"),  # ask first
+    ShowResult(name.output),                       # then display
 )
 ```
 
 ---
 
-## 10. Zusammenfassung
+## 10. Summary
 
-| Konzept | Erklaerung |
-|---------|-----------|
-| **Action** | Eine Funktion / Tätigkeit |
-| **ActionOutput** | Das Ergebnis einer Aktion (`.output`) |
-| **Shortcut** | Der Container fuer alle Aktionen |
-| **Control Flow** | If/Menu/Repeat-Bloecke fuer Logik |
-| **Variable** | Speicher fuer Werte |
-| **Text Token** | Dynamische Text-Werte (Platzhalter) |
+| Concept | Explanation |
+|---------|------------|
+| **Action** | A function / operation |
+| **ActionOutput** | The result of an action (`.output`) |
+| **Shortcut** | The container for all actions |
+| **Control Flow** | If/Menu/Repeat blocks for logic |
+| **Variable** | Storage for values |
+| **Text Token** | Dynamic text values (placeholders) |
 
 ---
 
-**Naechster Schritt:** Sieh dir praktische Beispiele in den Tutorials an oder schau in die [FAQ](FAQ).
+**Next step:** Check out practical examples in the tutorials or visit the [FAQ](FAQ).
