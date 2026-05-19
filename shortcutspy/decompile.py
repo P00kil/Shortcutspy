@@ -239,7 +239,6 @@ def resolve_value(val: Any, uuid_to_varname: dict[str, str]) -> str:
             return repr(val)
 
     if isinstance(val, dict):
-        val.get("Value", {})
         # Attachment / Token (Magic Variable Referenz)
         if "attachmentsByRange" in val:
             # NSAttributedString token format
@@ -377,9 +376,8 @@ class Decompiler:
         if base_imports or control_flow_used:
             all_imports = sorted(set(base_imports) | control_flow_used | set(type_imports))
             import_lines.append("from shortcutspy import (")
-            for i, name in enumerate(all_imports):
-                comma = "," if i < len(all_imports) - 1 else ""
-                import_lines.append(f"    {name}{comma}")
+            for name in all_imports:
+                import_lines.append(f"    {name},")
             import_lines.append("    Shortcut, install_shortcut,")
             import_lines.append(")")
 
@@ -444,7 +442,6 @@ class Decompiler:
                 continue
 
             if cls_name == "__IF__":
-                params.get("GroupingIdentifier")
                 control_mode = params.get("WFControlFlowMode", 0)
 
                 if control_mode == 0:  # Öffnender If-Block
@@ -547,7 +544,6 @@ class Decompiler:
         i = start_idx + 1
         while i < len(actions):
             a = actions[i]
-            a.get("WFWorkflowActionIdentifier", "")
             p = a.get("WFWorkflowActionParameters", {})
             if p.get("GroupingIdentifier") == group_id:
                 mode = p.get("WFControlFlowMode", 0)
@@ -613,7 +609,8 @@ class Decompiler:
         params_repr = repr(safe_params) if safe_params else ""
         if params_repr and len(params_repr) > 80:
             params_repr = params_repr[:77] + "..."
-        line = f'{prefix}{var_name} = RawAction("{identifier}", {params_repr})'
+        extra = f"  # params={params_repr}" if params_repr else ""
+        line = f'{prefix}{var_name} = RawAction("{identifier}"){extra}'
         self.lines.append(f'{prefix}# Unbekannte Action: {identifier}')
         self.lines.append(line)
         return var_name
