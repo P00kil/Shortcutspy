@@ -12,10 +12,18 @@ Verwendung:
 import plistlib
 import json
 import argparse
+import inspect
 import sys
 import re
 from pathlib import Path
 from typing import Any
+
+try:
+    from . import actions as _actions_module
+except ImportError:
+    # Direkter Aufruf als Skript: füge Parent-Dir zum Pfad hinzu
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from shortcutspy import actions as _actions_module  # type: ignore
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -27,137 +35,173 @@ from typing import Any
 #   "@input" → WFInput           (generischer Input)
 # ─────────────────────────────────────────────────────────────────────────────
 
-ACTION_MAP: dict[str, tuple[str, dict[str, str]]] = {
-    # Text
-    "is.workflow.actions.gettext":          ("Text",        {"WFTextActionText": "text"}),
-    "is.workflow.actions.showresult":       ("ShowResult",  {"WFInput": "input"}),
-    "is.workflow.actions.text.split":       ("SplitText",   {"WFInput": "input", "WFTextSeparator": "separator", "WFTextCustomSeparator": "custom_separator"}),
-    "is.workflow.actions.text.combine":     ("CombineText", {"WFInput": "input", "WFTextSeparator": "separator", "WFTextCustomSeparator": "custom_separator"}),
-    "is.workflow.actions.text.replace":     ("ReplaceText", {"WFInput": "input", "WFReplaceTextFind": "find", "WFReplaceTextReplace": "replacement", "WFReplaceTextCaseSensitive": "case_sensitive", "WFReplaceTextRegularExpression": "regex"}),
-    "is.workflow.actions.text.changecase":  ("ChangeCase",  {"WFInput": "input", "WFCaseType": "case_type"}),
-    "is.workflow.actions.count":            ("CountItems",  {"WFInput": "input", "WFCountType": "count_type"}),
-    "is.workflow.actions.detect.text":      ("GetText",     {"WFInput": "input"}),
+# ─────────────────────────────────────────────────────────────────────────────
+# Manuelle Param-Maps (plist_key → python_kwarg) für Aktionen, deren Mapping
+# nicht aus dem Action-Identifier ableitbar ist.  Wird mit der automatischen
+# Auto-Discovery aus actions.py kombiniert.
+# ─────────────────────────────────────────────────────────────────────────────
 
-    # Eingabe / UI
-    "is.workflow.actions.ask":              ("Ask",         {"WFAskActionPrompt": "question", "WFAskActionDefaultAnswer": "default"}),
-    "is.workflow.actions.choosefromlist":   ("ChooseFromList", {"WFInput": "input", "WFChooseFromListActionPrompt": "prompt", "WFChooseFromListActionSelectMultiple": "multiple", "WFChooseFromListActionSelectAllInitially": "select_all"}),
-    "is.workflow.actions.alert":            ("Alert",       {"WFAlertActionTitle": "title", "WFAlertActionMessage": "message", "WFAlertActionCancelButtonShown": "show_cancel"}),
-    "is.workflow.actions.notification":     ("Notification", {"WFNotificationActionBody": "body", "WFNotificationActionTitle": "title", "WFNotificationActionSound": "sound"}),
-
-    # Zahlen
-    "is.workflow.actions.number":           ("Number",      {"WFNumberActionNumber": "number"}),
-    "is.workflow.actions.random":           ("RandomNumber", {"WFRandomNumberMinimum": "min", "WFRandomNumberMaximum": "max"}),
-    "is.workflow.actions.math":             ("Calculate",   {"WFInput": "input", "WFMathOperation": "operation", "WFMathOperand": "operand"}),
-    "is.workflow.actions.format.number":    ("FormatNumber", {"WFInput": "input", "WFNumberFormatDecimalPlaces": "decimal_places"}),
-    "is.workflow.actions.round":            ("Round",       {"WFInput": "input", "WFRoundMode": "mode", "WFRoundTo": "to"}),
-    "is.workflow.actions.statistics":       ("Statistics",  {"WFInput": "input", "WFStatisticsOperation": "operation"}),
-
-    # Datum & Zeit
-    "is.workflow.actions.date":             ("Date",        {"WFDateActionMode": "mode", "WFDateActionDate": "date"}),
-    "is.workflow.actions.format.date":      ("FormatDate",  {"WFInput": "input", "WFDateFormatStyle": "format"}),
-    "is.workflow.actions.adjustdate":       ("AdjustDate",  {"WFInput": "input", "WFDuration": "duration", "WFAdjustOperation": "operation"}),
-    "is.workflow.actions.gettimebetweendates": ("TimeBetweenDates", {"WFInput": "input", "WFTimeUntilReferenceDate": "reference", "WFTimeUntilUnit": "unit"}),
-
-    # Listen & Dictionaries
-    "is.workflow.actions.list":             ("List",        {"WFItems": "items"}),
-    "is.workflow.actions.getitemfromlist":  ("GetItemFromList", {"WFInput": "input", "WFItemSpecifier": "position", "WFItemIndex": "index"}),
-    "is.workflow.actions.dictionary":       ("Dictionary",  {"WFItems": "items"}),
-    "is.workflow.actions.getdictionaryvalue": ("GetDictionaryValue", {"WFInput": "input", "WFDictionaryKey": "key", "WFGetDictionaryValueType": "value_type"}),
-    "is.workflow.actions.setdictionaryvalue": ("SetDictionaryValue", {"WFInput": "input", "WFDictionaryKey": "key", "WFDictionaryValue": "value"}),
-    "is.workflow.actions.filter.files":     ("FilterItems", {"WFInput": "input"}),
-
-    # Web
-    "is.workflow.actions.url":              ("URL",         {"WFURLActionURL": "url"}),
-    "is.workflow.actions.downloadurl":      ("DownloadURL", {"WFInput": "input", "WFHTTPMethod": "method", "WFHTTPBodyType": "body_type"}),
-    "is.workflow.actions.searchweb":        ("SearchWeb",   {"WFInput": "input", "WFSearchWebDestination": "engine"}),
-    "is.workflow.actions.openurl":          ("OpenURL",     {"WFInput": "input"}),
-    "is.workflow.actions.url.expand":       ("ExpandURL",   {"WFInput": "input"}),
-    "is.workflow.actions.geturlcomponent":  ("GetURLComponent", {"WFInput": "input", "WFURLComponent": "component"}),
-
-    # Zwischenablage
-    "is.workflow.actions.getclipboard":     ("GetClipboard", {}),
-    "is.workflow.actions.setclipboard":     ("SetClipboard", {"WFInput": "input", "WFLocalOnlyClipboard": "local_only"}),
-
-    # Variablen
-    "is.workflow.actions.setvariable":      ("SetVariable",    {"WFVariableName": "name", "WFInput": "input"}),
-    "is.workflow.actions.getvariable":      ("GetVariable",    {"WFVariableName": "name"}),
-    "is.workflow.actions.appendvariable":   ("AppendVariable", {"WFVariableName": "name", "WFInput": "input"}),
-
-    # Dateien
-    "is.workflow.actions.getfile":          ("GetFile",    {"WFFileStorageService": "service", "WFGetFilePath": "path", "WFShowFilePicker": "show_picker"}),
-    "is.workflow.actions.documentpicker.save": ("SaveFile", {"WFInput": "input", "WFFileDestination": "destination"}),
-    "is.workflow.actions.file.delete":      ("DeleteFile", {"WFInput": "input"}),
-    "is.workflow.actions.zip":              ("Zip",        {"WFInput": "input", "WFZipName": "name"}),
-    "is.workflow.actions.unzip":            ("Unzip",      {"WFInput": "input"}),
-    "is.workflow.actions.readfile":         ("GetContentsOfFile", {"WFInput": "input"}),
-    "is.workflow.actions.file.rename":      ("RenameFile", {"WFInput": "input", "WFFilename": "name"}),
-    "is.workflow.actions.getparentdirectory": ("GetParentDirectory", {"WFInput": "input"}),
-    "is.workflow.actions.createfolder":     ("CreateFolder", {"WFFilePath": "path"}),
-
-    # Bilder
-    "is.workflow.actions.takephoto":        ("TakePhoto",   {"WFPhotoCount": "count", "WFCameraFacing": "camera", "WFCameraFlashMode": "flash"}),
-    "is.workflow.actions.takescreenshot":   ("TakeScreenshot", {"WFScreenshotType": "type"}),
-    "is.workflow.actions.imageresizing":    ("ResizeImage", {"WFInput": "input", "WFImageResizeWidth": "width", "WFImageResizeHeight": "height"}),
-    "is.workflow.actions.crop":             ("CropImage",   {"WFInput": "input", "WFImageCropWidth": "width", "WFImageCropHeight": "height", "WFImageCropX": "x", "WFImageCropY": "y"}),
-    "is.workflow.actions.convertimage":     ("ConvertImage", {"WFInput": "input", "WFImageFormat": "format", "WFImageCompressionQuality": "quality"}),
-    "is.workflow.actions.imageattributes":  ("GetImageDetail", {"WFInput": "input", "WFImageAttribute": "attribute"}),
-    "is.workflow.actions.editphoto":        ("EditPhoto",   {"WFInput": "input"}),
-
-    # PDF
-    "is.workflow.actions.makepdf":          ("MakePDF",    {"WFInput": "input", "WFPDFIncludeMargin": "include_margin"}),
-    "is.workflow.actions.pdf.gettext":      ("GetTextFromPDF", {"WFInput": "input"}),
-    "is.workflow.actions.pdf.split":        ("SplitPDF",   {"WFInput": "input"}),
-
-    # Medien
-    "is.workflow.actions.playmusic":        ("PlayMusic",  {"WFMediaItems": "items"}),
-    "is.workflow.actions.recordaudio":      ("RecordAudio", {"WFRecordingCompression": "quality", "WFRecordingStart": "start"}),
-    "is.workflow.actions.encodemedia":      ("EncodeMedia", {"WFInput": "input", "WFMediaSize": "size", "WFMediaFrameRate": "fps"}),
-
-    # Gerät
-    "is.workflow.actions.getdevicedetails": ("GetDeviceDetails", {"WFDeviceDetail": "detail"}),
-    "is.workflow.actions.battery.getlevel": ("GetBatteryLevel", {}),
-    "is.workflow.actions.setbrightness":    ("SetBrightness", {"WFBrightness": "level"}),
-    "is.workflow.actions.setvolume":        ("SetVolume",  {"WFVolume": "level"}),
-    "is.workflow.actions.setappearance":    ("SetAppearance", {"WFAppearance": "mode"}),
-
-    # Standort
-    "is.workflow.actions.getcurrentlocation": ("GetCurrentLocation", {}),
-    "is.workflow.actions.getdistance":      ("GetDistance", {"WFInput": "input", "WFDistanceTo": "to"}),
-    "is.workflow.actions.getdirections":    ("GetDirections", {"WFInput": "input", "WFGetDirectionsActionMode": "mode"}),
-    "is.workflow.actions.maps.search":      ("SearchMaps", {"WFInput": "input"}),
-    "is.workflow.actions.address":          ("Address",    {"WFAddressLine1Field": "line1", "WFCityField": "city", "WFStateField": "state", "WFCountryField": "country"}),
-    "is.workflow.actions.getaddress":       ("GetAddress", {"WFInput": "input"}),
-
-    # Kalender
-    "is.workflow.actions.addnewevent":      ("AddNewEvent", {"WFCalendarItemStartDate": "start", "WFCalendarItemEndDate": "end", "WFCalendarItemTitle": "title"}),
-    "is.workflow.actions.geteventattendees": ("GetEventAttendees", {"WFInput": "input"}),
-    "is.workflow.actions.getcalendarevents": ("GetUpcomingEvents", {"WFGetCalendarEventsCalendar": "calendar", "WFGetCalendarEventsAmount": "amount"}),
-    "is.workflow.actions.addnewreminder":   ("AddReminder", {"WFInput": "input", "WFAlertsArray": "alerts"}),
-    "is.workflow.actions.getreminders":     ("GetReminders", {"WFGetListType": "type"}),
-
-    # Kontakte & Sharing
-    "is.workflow.actions.sendmessage":      ("SendMessage", {"WFInput": "input", "WFSendMessageRecipients": "recipients"}),
-    "is.workflow.actions.sendmail":         ("SendEmail",  {"WFSendEmailActionInputAttachments": "attachments", "WFSendEmailActionToRecipients": "to", "WFSendEmailActionSubject": "subject", "WFSendEmailActionBody": "body"}),
-    "is.workflow.actions.share":            ("Share",      {"WFInput": "input"}),
-    "is.workflow.actions.contacts":         ("GetContacts", {}),
-    "is.workflow.actions.selectcontact":    ("SelectContact", {}),
-
-    # Scripting
-    "is.workflow.actions.runshellscript":   ("RunShellScript", {"WFInput": "input", "WFShellScriptShell": "shell", "WFShellScriptInputMode": "input_mode"}),
-    "is.workflow.actions.runapplescript":   ("RunAppleScript", {"WFInput": "input", "WFAppleScript": "script"}),
-    "is.workflow.actions.runshortcut":      ("RunShortcut",  {"WFShortcutName": "name", "WFInput": "input"}),
-    "is.workflow.actions.wait":             ("Wait",        {"WFDuration": "duration"}),
-    "is.workflow.actions.waittoreturn":     ("WaitToReturn", {}),
-    "is.workflow.actions.exit":             ("ExitShortcut", {"WFResult": "result"}),
-    "is.workflow.actions.output":           ("Output",      {"WFInput": "input"}),
-
-    # Control Flow – werden SEPARAT behandelt
-    "is.workflow.actions.conditional":      ("__IF__",      {}),
-    "is.workflow.actions.choosefrommenu":   ("__MENU__",    {}),
-    "is.workflow.actions.repeat.count":     ("__REPEAT_COUNT__", {}),
-    "is.workflow.actions.repeat.each":      ("__REPEAT_EACH__", {}),
-    "is.workflow.actions.nothing":          ("__NOTHING__", {}),
+_PARAM_MAPS: dict[str, dict[str, str]] = {
+    "is.workflow.actions.gettext":              {"WFTextActionText": "text"},
+    "is.workflow.actions.showresult":           {"Text": "text"},
+    "is.workflow.actions.ask":                  {"WFAskActionPrompt": "question", "WFAskActionDefaultAnswer": "default_answer", "WFInputType": "input_type"},
+    "is.workflow.actions.alert":                {"WFAlertActionTitle": "title", "WFAlertActionMessage": "message", "WFAlertActionCancelButtonShown": "show_cancel"},
+    "is.workflow.actions.notification":         {"WFNotificationActionBody": "body", "WFNotificationActionTitle": "title"},
+    "is.workflow.actions.setvariable":          {"WFVariableName": "name", "WFInput": "input"},
+    "is.workflow.actions.getvariable":          {"WFVariable": "name"},
+    "is.workflow.actions.appendvariable":       {"WFVariableName": "name", "WFInput": "input"},
+    "is.workflow.actions.text.split":           {"text": "text", "WFTextSeparator": "separator", "WFTextCustomSeparator": "custom_separator"},
+    "is.workflow.actions.text.combine":         {"text": "text", "WFTextSeparator": "separator", "WFTextCustomSeparator": "custom_separator"},
+    "is.workflow.actions.text.match":           {"text": "text", "WFMatchTextPattern": "pattern"},
+    "is.workflow.actions.text.changecase":      {"text": "text", "WFCaseType": "case"},
+    "is.workflow.actions.text.replace":         {"WFInput": "input", "WFReplaceTextFind": "find", "WFReplaceTextReplace": "replace", "WFReplaceTextRegularExpression": "regex"},
+    "is.workflow.actions.text.trimwhitespace":  {"WFInput": "input"},
+    "is.workflow.actions.detect.text":          {"WFInput": "input"},
+    "is.workflow.actions.number":               {"WFNumberActionNumber": "value"},
+    "is.workflow.actions.number.random":        {"WFRandomNumberMinimum": "minimum", "WFRandomNumberMaximum": "maximum"},
+    "is.workflow.actions.math":                 {"WFInput": "input", "WFMathOperation": "operation", "WFMathOperand": "operand"},
+    "is.workflow.actions.calculateexpression":  {"Input": "expression"},
+    "is.workflow.actions.round":                {"WFInput": "input", "WFRoundMode": "mode"},
+    "is.workflow.actions.statistics":           {"Input": "input", "WFStatisticsOperation": "operation"},
+    "is.workflow.actions.format.number":        {"WFNumber": "number", "WFNumberFormatDecimalPlaces": "decimal_places"},
+    "is.workflow.actions.detect.number":        {"WFInput": "input"},
+    "is.workflow.actions.date":                 {"WFDateActionDate": "date_string"},
+    "is.workflow.actions.format.date":          {"WFDate": "date", "WFDateFormat": "format_string"},
+    "is.workflow.actions.adjustdate":           {"WFDate": "date", "WFDuration": "duration"},
+    "is.workflow.actions.gettimebetweendates":  {"WFInput": "input", "WFTimeUntilFromDate": "from_date", "WFTimeUntilUnit": "unit"},
+    "is.workflow.actions.detect.date":          {"WFInput": "input"},
+    "is.workflow.actions.converttimezone":      {"Date": "date", "WFTimeZone": "timezone"},
+    "is.workflow.actions.list":                 {"WFItems": "items"},
+    "is.workflow.actions.choosefromlist":       {"WFInput": "input", "WFChooseFromListActionPrompt": "prompt"},
+    "is.workflow.actions.getitemfromlist":      {"WFInput": "input", "WFItemIndex": "index", "WFItemSpecifier": "specifier"},
+    "is.workflow.actions.dictionary":           {"WFItems": "items"},
+    "is.workflow.actions.getvalueforkey":       {"WFInput": "input", "WFDictionaryKey": "key"},
+    "is.workflow.actions.setvalueforkey":       {"WFDictionary": "dictionary", "WFDictionaryKey": "key", "WFDictionaryValue": "value"},
+    "is.workflow.actions.url":                  {"WFURLActionURL": "url"},
+    "is.workflow.actions.downloadurl":          {"WFURL": "url", "WFHTTPMethod": "method", "WFHTTPHeaders": "headers"},
+    "is.workflow.actions.geturlcomponent":      {"WFURL": "url", "WFURLComponent": "component"},
+    "is.workflow.actions.urlencode":            {"WFInput": "input", "WFEncodeMode": "mode"},
+    "is.workflow.actions.url.expand":           {"URL": "url"},
+    "is.workflow.actions.url.getheaders":       {"WFInput": "input"},
+    "is.workflow.actions.getwebpagecontents":   {"WFInput": "input"},
+    "is.workflow.actions.detect.link":          {"WFInput": "input"},
+    "is.workflow.actions.file":                 {"WFFilePath": "path"},
+    "is.workflow.actions.file.select":          {},
+    "is.workflow.actions.documentpicker.save":  {"WFInput": "input", "WFFileDestinationPath": "path"},
+    "is.workflow.actions.file.delete":          {"WFInput": "input"},
+    "is.workflow.actions.file.move":            {"WFFile": "file", "WFFileDestinationPath": "destination"},
+    "is.workflow.actions.file.rename":          {"WFFile": "file", "WFNewFilename": "name"},
+    "is.workflow.actions.file.createfolder":    {"WFFilePath": "path"},
+    "is.workflow.actions.file.getfoldercontents": {"WFFolder": "folder", "Recursive": "recursive"},
+    "is.workflow.actions.file.append":          {"WFInput": "input", "WFFilePath": "path"},
+    "is.workflow.actions.makezip":              {"WFInput": "input", "WFZIPName": "name"},
+    "is.workflow.actions.unzip":                {"WFArchive": "archive"},
+    "is.workflow.actions.takephoto":            {},
+    "is.workflow.actions.takescreenshot":       {},
+    "is.workflow.actions.selectphoto":          {},
+    "is.workflow.actions.savetocameraroll":     {"WFInput": "input", "WFCameraRollSelectedGroup": "album"},
+    "is.workflow.actions.image.convert":        {"WFImageFormat": "format", "WFImageCompressionQuality": "quality"},
+    "is.workflow.actions.image.resize":         {"WFImage": "image", "WFImageResizeWidth": "width", "WFImageResizeHeight": "height"},
+    "is.workflow.actions.image.crop":           {"WFInput": "input", "WFImageCropX": "x", "WFImageCropY": "y", "WFImageCropWidth": "width", "WFImageCropHeight": "height"},
+    "is.workflow.actions.image.rotate":         {"WFImage": "image", "WFImageRotateAmount": "degrees"},
+    "is.workflow.actions.image.flip":           {"WFInput": "input", "WFImageFlipDirection": "direction"},
+    "is.workflow.actions.image.combine":        {"WFInput": "input", "WFImageCombineMode": "mode", "WFImageCombineSpacing": "spacing"},
+    "is.workflow.actions.overlaytext":          {"WFImage": "image", "WFOverlayTextText": "text"},
+    "is.workflow.actions.image.removebackground": {"WFInput": "input"},
+    "is.workflow.actions.extracttextfromimage": {"WFImage": "image"},
+    "is.workflow.actions.makegif":              {"WFInput": "input", "WFMakeGIFActionDelayTime": "seconds_per_photo"},
+    "is.workflow.actions.makepdf":              {"WFInput": "input"},
+    "is.workflow.actions.gettextfrompdf":       {"WFInput": "input"},
+    "is.workflow.actions.splitpdf":             {"WFInput": "input"},
+    "is.workflow.actions.compresspdf":          {"WFInput": "input"},
+    "is.workflow.actions.speaktext":            {"WFText": "text", "WFSpeakTextRate": "rate"},
+    "is.workflow.actions.playsound":            {"WFInput": "input"},
+    "is.workflow.actions.detectlanguage":       {"WFInput": "input"},
+    "is.workflow.actions.text.translate":       {"WFInputText": "text", "WFTranslateTextLanguage": "to_language"},
+    "is.workflow.actions.encodemedia":          {"WFMedia": "media"},
+    "is.workflow.actions.trimvideo":            {"WFInputMedia": "input"},
+    "is.workflow.actions.playmusic":            {"WFMediaItems": "music"},
+    "is.workflow.actions.pausemusic":           {"WFPlayPauseBehavior": "behavior"},
+    "is.workflow.actions.setvolume":            {"WFVolume": "volume"},
+    "is.workflow.actions.getdevicedetails":     {"WFDeviceDetail": "detail"},
+    "is.workflow.actions.setbrightness":        {"WFBrightness": "brightness"},
+    "is.workflow.actions.wifi.set":             {"OnValue": "on"},
+    "is.workflow.actions.bluetooth.set":        {"OnValue": "on"},
+    "is.workflow.actions.appearance":           {"WFAppearance": "style"},
+    "is.workflow.actions.openapp":              {"WFAppIdentifier": "app_id"},
+    "is.workflow.actions.delay":                {"WFDelayTime": "seconds"},
+    "is.workflow.actions.output":               {"WFOutput": "output"},
+    "is.workflow.actions.getdistance":          {"WFGetDistanceDestination": "destination"},
+    "is.workflow.actions.getdirections":        {"WFDestination": "destination", "WFGetDirectionsActionMode": "mode"},
+    "is.workflow.actions.searchmaps":           {"WFInput": "input"},
+    "is.workflow.actions.setclipboard":         {"WFInput": "input"},
+    "is.workflow.actions.share":                {"WFInput": "input"},
+    "is.workflow.actions.searchweb":            {"WFInputText": "query", "WFSearchWebDestination": "engine"},
+    "is.workflow.actions.openurl":              {"WFInput": "url"},
+    "is.workflow.actions.showwebpage":          {"WFURL": "url"},
+    "is.workflow.actions.getarticle":           {"WFWebPage": "webpage"},
+    "is.workflow.actions.rss":                  {"WFRSSFeedURL": "url", "WFRSSItemQuantity": "count"},
+    "is.workflow.actions.runjavascriptonwebpage": {"WFJavaScript": "script"},
+    "is.workflow.actions.base64encode":         {"WFInput": "input", "WFEncodeMode": "mode"},
+    "is.workflow.actions.hash":                 {"WFInput": "input", "WFHashType": "algorithm"},
+    "is.workflow.actions.generatebarcode":      {"WFText": "text"},
+    "is.workflow.actions.runshellscript":       {"WFShellScript": "script", "WFShellScriptShell": "shell", "WFInput": "input"},
+    "is.workflow.actions.runapplescript":       {"WFAppleScript": "script"},
+    "is.workflow.actions.runjavascriptforautomation": {"WFJavaScript": "script", "Input": "input"},
+    "is.workflow.actions.runworkflow":          {"WFWorkflowName": "name", "WFInput": "input"},
+    "is.workflow.actions.openxcallbackurl":     {"WFXCallbackURL": "url"},
+    "is.workflow.actions.addnewevent":          {"WFCalendarItemTitle": "title", "WFCalendarItemStartDate": "start_date", "WFCalendarItemEndDate": "end_date", "WFCalendarItemCalendar": "calendar"},
+    "is.workflow.actions.getupcomingevents":    {"WFGetUpcomingItemCount": "count"},
+    "is.workflow.actions.addnewreminder":       {"WFReminderText": "title", "WFReminderList": "list_name"},
+    "is.workflow.actions.getupcomingreminders": {"WFGetUpcomingItemCount": "count"},
+    "is.workflow.actions.getitemname":          {"WFInput": "input"},
+    "is.workflow.actions.getitemtype":          {"WFInput": "input"},
+    "is.workflow.actions.setitemname":          {"WFInput": "input", "WFName": "name"},
+    "is.workflow.actions.previewdocument":      {"WFInput": "input"},
+    "is.workflow.actions.print":                {"WFInput": "input"},
+    "is.workflow.actions.format.filesize":      {"WFFileSize": "file_size", "WFFileSizeFormat": "format"},
+    "is.workflow.actions.gethtmlfromrichtext":  {"WFInput": "input"},
+    "is.workflow.actions.getmarkdownfromrichtext": {"WFInput": "input"},
+    "is.workflow.actions.getrichtextfromhtml":  {"WFHTML": "html"},
+    "is.workflow.actions.getrichtextfrommarkdown": {"WFInput": "input"},
+    "is.workflow.actions.measurement.create":   {"WFMeasurementUnitType": "unit", "WFMeasurementValue": "value"},
+    "is.workflow.actions.measurement.convert":  {"WFInput": "input", "WFMeasurementUnit": "to_unit"},
+    "is.workflow.actions.sendmessage":          {"WFSendMessageContent": "content", "WFSendMessageActionRecipients": "recipients"},
+    "is.workflow.actions.sendemail":            {"WFSendEmailActionToRecipients": "to", "WFSendEmailActionSubject": "subject", "WFSendEmailActionInputAttachments": "body"},
+    "is.workflow.actions.airdropdocument":      {"WFInput": "input"},
+    "is.workflow.actions.runsshscript":         {"WFSSHScript": "script", "WFSSHHost": "host", "WFSSHPort": "port", "WFSSHUser": "user", "WFSSHPassword": "password"},
+    "is.workflow.actions.comment":              {"WFCommentActionText": "text"},
 }
+
+# Control-Flow Marker (werden separat behandelt)
+_CONTROL_FLOW: dict[str, str] = {
+    "is.workflow.actions.conditional":      "__IF__",
+    "is.workflow.actions.choosefrommenu":   "__MENU__",
+    "is.workflow.actions.repeat.count":     "__REPEAT_COUNT__",
+    "is.workflow.actions.repeat.each":      "__REPEAT_EACH__",
+    "is.workflow.actions.nothing":          "__NOTHING__",
+}
+
+
+def _build_action_map() -> dict[str, tuple[str, dict[str, str]]]:
+    """Baut die ACTION_MAP dynamisch aus actions.py + manuellen Param-Maps."""
+    result: dict[str, tuple[str, dict[str, str]]] = {}
+    for name, cls in inspect.getmembers(_actions_module, inspect.isclass):
+        if not issubclass(cls, _actions_module.Action) or cls is _actions_module.Action:
+            continue
+        if name in ("RawAction", "AppIntentAction"):
+            continue
+        ident = getattr(cls, "identifier", "")
+        if not ident:
+            continue
+        result[ident] = (name, _PARAM_MAPS.get(ident, {}))
+    # Control-Flow-Marker einfügen
+    for ident, marker in _CONTROL_FLOW.items():
+        result[ident] = (marker, {})
+    return result
+
+
+ACTION_MAP: dict[str, tuple[str, dict[str, str]]] = _build_action_map()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -331,13 +375,11 @@ class Decompiler:
 
         import_lines = []
         if base_imports or control_flow_used:
-            all_imports = sorted(set(base_imports) | control_flow_used | set(type_imports))
-            import_lines.append(f"from shortcutspy import (")
-            for i, name in enumerate(all_imports):
-                comma = "," if i < len(all_imports) - 1 else ""
-                import_lines.append(f"    {name}{comma}")
-            import_lines.append(f"    Shortcut, install_shortcut,")
-            import_lines.append(f")")
+            all_imports = sorted(set(base_imports) | control_flow_used | set(type_imports) | {"Shortcut", "install_shortcut"})
+            import_lines.append("from shortcutspy import (")
+            for name in all_imports:
+                import_lines.append(f"    {name},")
+            import_lines.append(")")
 
         # Shortcut zusammensetzen
         safe_name = shortcut_name.replace('"', '\\"')
@@ -585,7 +627,16 @@ class Decompiler:
         input_str = resolve_value(input_val, self.uuid_to_varname)
         condition = params.get("WFCondition", 100)
 
-        self.lines.append(f"{prefix}{var_name} = If({input_str}, condition={condition}).then(")
+        # Vergleichswert (WFConditionalActionString, z.B. "kalender_neu" bei "Enthält")
+        value_arg = ""
+        if "WFConditionalActionString" in params:
+            value_str = resolve_value(params["WFConditionalActionString"], self.uuid_to_varname)
+            value_arg = f", value={value_str}"
+        elif "WFNumberValue" in params:
+            value_str = resolve_value(params["WFNumberValue"], self.uuid_to_varname)
+            value_arg = f", value={value_str}"
+
+        self.lines.append(f"{prefix}{var_name} = If({input_str}, condition={condition}{value_arg}).then(")
 
         # Then-Block
         then_vars = self._process_actions(then_actions, indent + 1)

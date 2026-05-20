@@ -1,3 +1,11 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+
+# Build-Artefakte aus install_shortcut/save_shortcut (werden bei Bedarf neu generiert)
+examples/*.shortcut
+examples/*_signed.shortcut
+
+# Virtuelle Umgebungen
+.venv/
+venv/

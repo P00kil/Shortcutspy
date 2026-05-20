@@ -83,13 +83,21 @@ class Variable:
 
     name: str
 
+    def as_attachment(self) -> dict:
+        """Variable als WFTextTokenAttachment (f\u00fcr WFInput in If/Actions)."""
+        return {
+            "Value": {
+                "Type": "Variable",
+                "VariableName": self.name,
+            },
+            "WFSerializationType": "WFTextTokenAttachment",
+        }
+
     def as_variable(self) -> dict:
+        """Einfaches Variable-Dict (f\u00fcr WFVariable in GetVariable u.\u00e4.)."""
         return {
             "Type": "Variable",
-            "Variable": {
-                "Value": {"string": self.name},
-                "WFSerializationType": "WFTextTokenString",
-            },
+            "VariableName": self.name,
         }
 
     def as_text_token(self) -> dict:
