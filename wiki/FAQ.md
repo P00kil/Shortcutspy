@@ -1,71 +1,70 @@
-# FAQ — Häufig Gestellte Fragen
+# FAQ — Frequently Asked Questions
 
-Hier sind Antworten auf Fragen, die Nutzer häufig stellen.
+Here are answers to questions that users frequently ask.
 
-> **English?** → [FAQ (EN)](FAQ-EN)
-
----
-
-## Allgemeine Fragen
-
-### F: Funktioniert ShortcutsPy auch auf Windows oder Linux?
-
-**A:** 
-- **Ja für die Dateierstellung:** Du kannst `.shortcut`-Dateien auf Windows und Linux erstellen
-- **Nein für Signierung und Installation:** Dafuer brauchst du macOS mit der `shortcuts` CLI
-
-**Workaround:** Erstelle den Shortcut auf Windows/Linux, kopiere die Datei auf einen Mac, und signiere sie dort.
 
 ---
 
-### F: Kann ich existierende Kurzbefehle bearbeiten?
+## General Questions
 
-**A:** Nicht direkt als laufendes Shortcut-Objekt im Framework. Du kannst aber bestehende `.shortcut`-Dateien mit dem Decompiler in ShortcutsPy-Code umwandeln, den Python-Code anpassen und den Kurzbefehl anschliessend neu exportieren.
+### Q: Does ShortcutsPy work on Windows or Linux?
+
+**A:**
+- **Yes for file creation:** You can create `.shortcut` files on Windows and Linux
+- **No for signing and installation:** For that you need macOS with the `shortcuts` CLI
+
+**Workaround:** Create the shortcut on Windows/Linux, copy the file to a Mac, and sign it there.
+
+---
+
+### Q: Can I edit existing shortcuts?
+
+**A:** Not directly as a live shortcut object inside the framework. But you can convert existing `.shortcut` files into ShortcutsPy code with the decompiler, modify the generated Python, and then export the shortcut again.
 
 ```bash
-python shortcutspy/decompile.py mein_kurzbefehl.shortcut -o bearbeitet.py
+python shortcutspy/decompile.py my_shortcut.shortcut -o editable.py
 ```
 
-Danach kannst du `bearbeitet.py` erweitern und wieder als `.shortcut` erzeugen.
+After that, you can extend `editable.py` and generate a new `.shortcut` file from it.
 
 ---
 
-### F: Warum ist mein erstellter Kurzbefehl so gross?
+### Q: Why is my created shortcut so large?
 
-**A:** ShortcutsPy erstellt vollstaendige, self-contained `.shortcut`-Dateien. Diese enthalten viele Metadaten und sind deshalb groesser als Kurzbefehle, die in der App erstellt werden. Das ist normal.
-
----
-
-### F: Kann ich Kurzbefehle mit der GUI-App erstellen statt mit Python?
-
-**A:** Natuerlich! Die Kurzbefehle-App ist dafuer da. ShortcutsPy ist nur fuer diejenigen, die lieber programmieren.
+**A:** ShortcutsPy creates complete, self-contained `.shortcut` files. These contain a lot of metadata and are therefore larger than shortcuts created in the app. This is normal.
 
 ---
 
-## Technische Fragen
+### Q: Can I create shortcuts with the GUI app instead of Python?
 
-### F: Was ist eine `ActionOutput`?
+**A:** Of course! The Shortcuts app is designed for that. ShortcutsPy is only for those who prefer to code.
 
-**A:** Ein `ActionOutput` ist eine Referenz zum Ausgabewert einer Aktion. Mit `.output` kannst du diesen Wert an andere Aktionen weitergeben.
+---
+
+## Technical Questions
+
+### Q: What is an `ActionOutput`?
+
+**A:** An `ActionOutput` is a reference to the output value of an action. With `.output` you can pass this value to other actions.
 
 ```python
-text = Text("Hallo")
+text = Text("Hello")
 print(text.output)  # <ActionOutput: ...>
-ShowResult(text.output)  # Zeigt den Wert an
+ShowResult(text.output)  # Displays the value
 ```
 
 ---
 
-### F: Kann ich `if`-Bedingungen in Python verwenden statt `If`?
+### Q: Can I use Python `if` statements instead of `If`?
 
-**A:** Nein. Python-`if`-Bedingungen werden ausgefuehrt, wenn das Skript laeuft, nicht wenn der Kurzbefehl ausgefuehrt wird. Du musst `If` von ShortcutsPy verwenden.
+**A:** No. Python `if` statements are executed when the script runs, not when the shortcut runs. You must use `If` from ShortcutsPy.
 
 ```python
-# ❌ Falsch: wird beim Erstellen ausgefuehrt, nicht beim Laufen
+# ❌ Wrong: executed at creation time, not at runtime
 if some_value:
     shortcut.add(...)
 
-# ✅ Richtig: wird als Teil des Kurzbefehls ausgefuehrt
+# ✅ Correct: executed as part of the shortcut
 If(some_value).then(
     ...
 ).otherwise(
@@ -75,53 +74,53 @@ If(some_value).then(
 
 ---
 
-### F: Kann ich Python-Code in einen Shortcut einbetten?
+### Q: Can I embed Python code in a shortcut?
 
-**A:** Nicht direkt. Du kannst aber `RunShellScript` oder `RunAppleScript` verwenden, um externe Befehle auszufuehren. ShortcutsPy selbst ist kein Runtime fuer den Shortcut, nur ein Generator.
-
----
-
-### F: Warum brauche ich `install_shortcut` auf einem Mac?
-
-**A:** Apple erfordert, dass Kurzbefehle digital signiert sein. Das ist ein Sicherheitsmechanismus. `install_shortcut` macht drei Dinge:
-1. Speichert die `.shortcut`-Datei
-2. Signiert sie mit `shortcuts sign`
-3. Oeffnet sie in der Kurzbefehle-App zum Importieren
+**A:** Not directly. However, you can use `RunShellScript` or `RunAppleScript` to execute external commands. ShortcutsPy itself is not a runtime for the shortcut, only a generator.
 
 ---
 
-## Design und Best Practices
+### Q: Why do I need `install_shortcut` on a Mac?
 
-### F: Sollte ich einen grossen Kurzbefehl oder mehrere kleine erstellen?
+**A:** Apple requires that shortcuts be digitally signed. This is a security mechanism. `install_shortcut` does three things:
+1. Saves the `.shortcut` file
+2. Signs it with `shortcuts sign`
+3. Opens it in the Shortcuts app for import
 
-**A:** Es haengt vom Zweck ab:
-- **Ein grosser:** Wenn alles zusammenhaengt und flussig ablaufen soll
-- **Mehrere kleine:** Wenn man einzelne Teile wiederverwenden moechte
+---
+
+## Design and Best Practices
+
+### Q: Should I create one large shortcut or several small ones?
+
+**A:** It depends on the purpose:
+- **One large one:** When everything is connected and should flow seamlessly
+- **Several small ones:** When you want to reuse individual parts
 
 ```python
-# Option 1: Ein grosser Kurzbefehl
-shortcut = Shortcut("Alles-in-Einem")
+# Option 1: One large shortcut
+shortcut = Shortcut("All-in-One")
 shortcut.add(
-    Text("Teil 1"),
-    Text("Teil 2"),
-    Text("Teil 3"),
+    Text("Part 1"),
+    Text("Part 2"),
+    Text("Part 3"),
 )
 
-# Option 2: Mehrere spezialisierte
-shortcut1 = Shortcut("Teil 1")
-shortcut2 = Shortcut("Teil 2")
+# Option 2: Multiple specialized ones
+shortcut1 = Shortcut("Part 1")
+shortcut2 = Shortcut("Part 2")
 ```
 
 ---
 
-### F: Wie organisiere ich mehrere Kurzbefehle in meinem Projekt?
+### Q: How do I organize multiple shortcuts in my project?
 
-**A:** Eine gute Struktur sieht so aus:
+**A:** A good structure looks like this:
 
 ```
 my_shortcuts/
 ├── main.py              # Generator
-├── config.py            # Einstellungen
+├── config.py            # Settings
 ├── actions/
 │   ├── __init__.py
 │   ├── text_helpers.py
@@ -137,7 +136,7 @@ my_shortcuts/
 from actions.text_helpers import create_greeting
 from actions.api_helpers import create_weather_check
 
-# Mehrere Kurzbefehle erstellen
+# Create multiple shortcuts
 greeting = create_greeting()
 weather = create_weather_check()
 
@@ -148,50 +147,50 @@ install_shortcut(weather, "output/weather.shortcut")
 
 ---
 
-### F: Wie teste ich Kurzbefehle, bevor ich sie installiere?
+### Q: How do I test shortcuts before installing them?
 
-**A:** Nutze `save_json` statt `install_shortcut`:
+**A:** Use `save_json` instead of `install_shortcut`:
 
 ```python
 from shortcutspy import save_json
 
 shortcut = Shortcut("Test")
-# ... Aktionen hinzufuegen ...
+# ... add actions ...
 
-# JSON-Export zum Debuggen
+# JSON export for debugging
 save_json(shortcut, "shortcut.json")
 
-# Wenn alles OK ist:
+# When everything is OK:
 install_shortcut(shortcut, "shortcut.shortcut")
 ```
 
 ---
 
-## Kompatibilitat
+## Compatibility
 
-### F: Welche macOS-Versionen werden unterstuetzt?
+### Q: Which macOS versions are supported?
 
 **A:**
-- **Fuer die Dateierstellung:** Alle (Windows, Mac, Linux)
-- **Fuer Signierung:** macOS Monterey (12.0) oder neuer
-- **Fuer Installation:** macOS Monterey oder neuer
+- **For file creation:** All (Windows, Mac, Linux)
+- **For signing:** macOS Monterey (12.0) or newer
+- **For installation:** macOS Monterey or newer
 
 ---
 
-### F: Kann ich Kurzbefehle auf dem iPhone/iPad ausfuehren?
+### Q: Can I run shortcuts on iPhone/iPad?
 
-**A:** Ja! Kurzbefehle, die du mit ShortcutsPy erstellst, koennen genauso auf iPhone/iPad ausgefuehrt werden wie jede andere Shortcut. Du brauchst die offizielle Shortcuts-App.
-
----
-
-### F: Gibt es Lizenz-Einschraenkungen?
-
-**A:** ShortcutsPy ist unter der MIT-Lizenz veroeffentlicht. Du kannst es frei verwenden, abaendern und weitergeben — auch kommerziell. Siehe [LICENSE](../LICENSE).
+**A:** Yes! Shortcuts created with ShortcutsPy can be run on iPhone/iPad just like any other shortcut. You need the official Shortcuts app.
 
 ---
 
-## Weitere Fragen?
+### Q: Are there license restrictions?
 
-- **Schau auf [GitHub Issues](https://github.com/P00kil/Shortcutspy/issues)** — Vielleicht wurde deine Frage bereits beantwortet
-- **Erstelle ein neues Issue** — Wenn nicht, stelle deine Frage dort
-- **Lese die [Core Concepts](Core-Concepts)** — dort gibt's tiefergehendes Wissen
+**A:** ShortcutsPy is published under the MIT License. You can freely use, modify, and redistribute it — including commercially. See [LICENSE](../LICENSE).
+
+---
+
+## More Questions?
+
+- **Check [GitHub Issues](https://github.com/P00kil/Shortcutspy/issues)** — Your question may already be answered
+- **Create a new issue** — If not, ask your question there
+- **Read the [Core Concepts](Core-Concepts)** — for deeper knowledge

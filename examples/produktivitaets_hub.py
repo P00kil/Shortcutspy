@@ -30,7 +30,6 @@ from shortcutspy import (
     ShowResult,
     install_shortcut,
     save_json,
-    save_shortcut,
 )
 
 

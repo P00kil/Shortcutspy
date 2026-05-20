@@ -1,31 +1,29 @@
 # ShortcutsPy Wiki
 
-Willkommen zum Wiki für **ShortcutsPy** — der Python-Framework fuer Apple-Kurzbefehle!
+Welcome to the wiki for **ShortcutsPy** — the Python framework for Apple Shortcuts!
 
-Dieses Wiki bietet detaillierte Anleitungen, Tutorials und Referenzen fuer alle Erfahrungsstufen.
+This wiki provides detailed guides, tutorials, and references for all experience levels.
 
-> **English?** → [Home (EN)](Home-EN)
+## Getting Started
 
-## Fuer Anfaenger
+New here? Start here:
 
-Neu hier? Starten Sie hier:
+1. **[Installation & Setup](Installation-&-Setup)** — Step-by-step installation guide
+2. **[Getting Started](Getting-Started)** — Your first shortcut in 5 minutes
+3. **[Core Concepts](Core-Concepts)** — Understand the core ideas behind ShortcutsPy
 
-1. **[Installation & Setup](Installation-&-Setup)** — Schritt-fuer-Schritt Anleitung zur Installation
-2. **[Getting Started](Getting-Started)** — Dein erstes Shortcut-Programm in 5 Minuten
-3. **[Core Concepts](Core-Concepts)** — Verstehe die Grundideen hinter ShortcutsPy
+## Reference & Help
 
-## Referenz & Hilfe
+- **[Decompiler](Decompiler)** — Convert existing `.shortcut` files into ShortcutsPy code
+- **[FAQ](FAQ)** — Frequently asked questions
+- **[Troubleshooting](Troubleshooting)** — Solutions to common problems
 
-- **[Decompiler](Decompiler)** — Bestehende `.shortcut`-Dateien in ShortcutsPy-Code umwandeln
-- **[FAQ](FAQ)** — Haeufig gestellte Fragen
-- **[Troubleshooting](Troubleshooting)** — Liste mit Loesungen zu haeufigen Problemen
+## Quick Links
 
-## Schnelle Links
-
-- **[Main README](https://github.com/P00kil/Shortcutspy)** — Projekt-Uebersicht
-- **[Examples](https://github.com/P00kil/Shortcutspy/tree/main/examples)** — Fertige Code-Beispiele
-- **[GitHub Issues](https://github.com/P00kil/Shortcutspy/issues)** — Fehler berichten oder Fragen stellen
+- **[Main README](https://github.com/P00kil/Shortcutspy)** — Project overview
+- **[Examples](https://github.com/P00kil/Shortcutspy/tree/main/examples)** — Ready-to-use code examples
+- **[GitHub Issues](https://github.com/P00kil/Shortcutspy/issues)** — Report bugs or ask questions
 
 ---
 
-**Viel Spass beim Programmieren mit ShortcutsPy!**
+**Have fun building with ShortcutsPy!**

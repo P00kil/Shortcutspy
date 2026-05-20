@@ -1,63 +1,63 @@
-# Decompiler: Bestehende Kurzbefehle in Python umwandeln
+# Decompiler: Convert Existing Shortcuts into Python
 
-Mit `shortcutspy/decompile.py` kannst du eine vorhandene `.shortcut`-Datei lesen und daraus lesbaren ShortcutsPy-Code erzeugen.
+With `shortcutspy/decompile.py`, you can read an existing `.shortcut` file and generate readable ShortcutsPy code from it.
 
-Das ist nuetzlich, wenn du:
+This is useful when you want to:
 
-- einen bestehenden Kurzbefehl verstehen willst
-- einen in der Kurzbefehle-App gebauten Workflow nach Python uebernehmen willst
-- einen vorhandenen Shortcut als Ausgangspunkt fuer Refactoring oder Versionsverwaltung nutzen willst
+- understand how an existing shortcut works
+- bring a shortcut built in the Shortcuts app into Python
+- use an existing shortcut as a starting point for refactoring or version control
 
-> Der Decompiler erzeugt Python-Code zur Weiterbearbeitung. Je nach verwendeten Aktionen kann anschliessend noch manuelle Nacharbeit noetig sein.
+> The decompiler generates Python code meant for further editing. Depending on the actions used, some manual cleanup may still be necessary afterwards.
 
-> **Siehe auch:** [README](https://github.com/P00kil/Shortcutspy#decompiler)
-
----
-
-## Schnellstart
-
-Aus dem Projektverzeichnis:
-
-```bash
-python shortcutspy/decompile.py mein_kurzbefehl.shortcut
-```
-
-Der generierte Python-Code wird standardmaessig auf `stdout` ausgegeben.
-
-Wenn du ihn direkt in eine Datei schreiben willst:
-
-```bash
-python shortcutspy/decompile.py mein_kurzbefehl.shortcut -o dekompiliert.py
-```
-
-Alternativ kannst du das Skript auch als Modul starten:
-
-```bash
-python -m shortcutspy.decompile mein_kurzbefehl.shortcut -o dekompiliert.py
-```
+> **See also:** [README](https://github.com/P00kil/Shortcutspy/blob/main/README.md#decompiler)
 
 ---
 
-## JSON-Debug-Ausgabe
+## Quick Start
 
-Mit `--json` gibt der Decompiler zusaetzlich die rohe Plist-Struktur aus.
-Das ist hilfreich, wenn du neue oder noch nicht vollstaendig gemappte Aktionen analysieren willst.
+From the project directory:
 
 ```bash
-python shortcutspy/decompile.py mein_kurzbefehl.shortcut --json
+python shortcutspy/decompile.py my_shortcut.shortcut
+```
+
+By default, the generated Python code is written to `stdout`.
+
+If you want to write it directly to a file:
+
+```bash
+python shortcutspy/decompile.py my_shortcut.shortcut -o decompiled.py
+```
+
+You can also run the script as a module:
+
+```bash
+python -m shortcutspy.decompile my_shortcut.shortcut -o decompiled.py
 ```
 
 ---
 
-## Beispiel
+## JSON Debug Output
 
-Angenommen, du hast einen existierenden Shortcut `notiz.shortcut`:
+With `--json`, the decompiler also prints the raw plist structure.
+This is useful when you want to inspect new or not yet fully mapped actions.
 
 ```bash
-python shortcutspy/decompile.py notiz.shortcut -o notiz.py
+python shortcutspy/decompile.py my_shortcut.shortcut --json
 ```
 
-Ein moeglicher Ausschnitt aus der Ausgabe sieht dann so aus:
+---
+
+## Example
+
+Assume you have an existing shortcut called `note.shortcut`:
+
+```bash
+python shortcutspy/decompile.py note.shortcut -o note.py
+```
+
+Part of the generated output could look like this:
 
 ```python
 from shortcutspy import (
@@ -67,60 +67,60 @@ from shortcutspy import (
     Shortcut, install_shortcut,
 )
 
-shortcut = Shortcut("Schnellnotiz")
+shortcut = Shortcut("Quick Note")
 
-ask = Ask(question="Was moechtest du notieren?")
+ask = Ask(question="What would you like to note?")
 setclipboard = SetClipboard(input=ask.output)
-notification = Notification(body="In Zwischenablage kopiert!", title="Notiz")
+notification = Notification(body="Copied to clipboard!", title="Note")
 
 shortcut.add(ask, setclipboard, notification)
-install_shortcut(shortcut, "schnellnotiz.shortcut")
+install_shortcut(shortcut, "quick_note.shortcut")
 ```
 
-Danach kannst du den erzeugten Code anpassen, erweitern und erneut als Shortcut exportieren.
+After that, you can adjust the generated code, extend it, and export it again as a shortcut.
 
 ---
 
-## Was der Decompiler erkennt
+## What the Decompiler Recognizes
 
-- viele Standardaktionen aus Text, Listen, Dateien, URL, Zwischenablage, Datum, Medien und Sharing
-- Kontrollfluss wie `If`, `Menu`, `RepeatCount` und `RepeatEach`
-- Magic Variables und Output-Referenzen ueber `.output`
-- einfache Variablenreferenzen wie `Variable("name")`
-
----
-
-## Grenzen und Verhalten
-
-### Unbekannte Aktionen
-
-Wenn eine Aktion noch nicht in `ACTION_MAP` hinterlegt ist, erzeugt der Decompiler eine `RawAction(...)`.
-So geht die Aktion nicht verloren, auch wenn sie noch nicht schoen auf eine ShortcutsPy-Klasse abgebildet ist.
-
-### Gemischte Text-Tokens
-
-Wenn ein Text sowohl freien Text als auch eingebettete Variablen enthaelt, wird das in manchen Faellen als String plus Kommentar ausgegeben.
-Diese Stellen solltest du nach dem Decompilieren kurz pruefen.
-
-### Keine verlustfreie Rundreise garantiert
-
-Apple speichert intern mehr Metadaten, als ShortcutsPy direkt als API modelliert.
-Der Decompiler zielt deshalb auf gut lesbaren und weiterbearbeitbaren Python-Code, nicht auf eine bitgenaue Rekonstruktion jeder internen Struktur.
+- many standard actions from text, lists, files, URLs, clipboard, date, media, and sharing
+- control flow such as `If`, `Menu`, `RepeatCount`, and `RepeatEach`
+- magic variables and output references via `.output`
+- simple variable references such as `Variable("name")`
 
 ---
 
-## Typischer Workflow
+## Limits and Behavior
 
-1. Vorhandenen Shortcut aus der Kurzbefehle-App als Datei exportieren
-2. Mit `decompile.py` in Python-Code umwandeln
-3. Erzeugten Code pruefen und bei Bedarf bereinigen
-4. Shortcut mit ShortcutsPy erweitern oder umbauen
-5. Mit `install_shortcut(...)` erneut erzeugen und importieren
+### Unknown Actions
+
+If an action is not yet mapped in `ACTION_MAP`, the decompiler emits a `RawAction(...)`.
+That way, the action is not lost even if it is not yet mapped cleanly to a ShortcutsPy class.
+
+### Mixed Text Tokens
+
+If a text value contains both plain text and embedded variables, the output may be rendered as a string plus a comment.
+These places are worth checking after decompilation.
+
+### No Lossless Round-Trip Guarantee
+
+Apple stores more internal metadata than ShortcutsPy exposes directly through its API.
+The goal of the decompiler is therefore readable and editable Python code, not a bit-perfect reconstruction of every internal structure.
 
 ---
 
-## Verwandte Seiten
+## Typical Workflow
 
-- [Getting Started](Getting-Started) fuer neue Shortcuts von Grund auf
-- [Core Concepts](Core-Concepts) fuer Outputs, Variablen und Kontrollfluss
-- [FAQ](FAQ) fuer typische Fragen rund um Bearbeitung und Kompatibilitaet
+1. Export an existing shortcut from the Shortcuts app as a file
+2. Convert it into Python code with `decompile.py`
+3. Review the generated code and clean it up where needed
+4. Extend or restructure the shortcut with ShortcutsPy
+5. Generate and import it again with `install_shortcut(...)`
+
+---
+
+## Related Pages
+
+- [Getting Started](Getting-Started) for building new shortcuts from scratch
+- [Core Concepts](Core-Concepts) for outputs, variables, and control flow
+- [FAQ](FAQ) for common questions about editing and compatibility

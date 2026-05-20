@@ -1,170 +1,169 @@
-# Getting Started: Dein erstes Shortcut
+# Getting Started: Your First Shortcut
 
-In diesen 5 Minuten erstellst du deinen ersten funktionsfaehigen Kurzbefehl mit ShortcutsPy.
+In these 5 minutes you'll create your first working shortcut with ShortcutsPy.
 
-> **English?** → [Getting Started (EN)](Getting-Started-EN)
 
-## Schritt 1: Datei erstellen
+## Step 1: Create a file
 
-Erstelle eine neue Datei namens `mein_kurzbefehl.py`:
+Create a new file called `my_shortcut.py`:
 
 ```python
 from shortcutspy import Shortcut, Text, Notification, install_shortcut
 
-# Neuen Kurzbefehl erstellen
-shortcut = Shortcut("Mein erster Kurzbefehl")
+# Create a new shortcut
+shortcut = Shortcut("My First Shortcut")
 
-# Eine Text-Aktion definieren
-text = Text("Hallo aus Python!")
+# Define a text action
+text = Text("Hello from Python!")
 
-# Eine Benachrichtigung anzeigen
+# Show a notification
 notification = Notification(body=text.output, title="ShortcutsPy")
 
-# Aktionen hinzufuegen
+# Add actions
 shortcut.add(text, notification)
 
-# Bauen, signieren und in der Kurzbefehle-App oeffnen
-install_shortcut(shortcut, "mein_kurzbefehl.shortcut")
+# Build, sign, and open in the Shortcuts app
+install_shortcut(shortcut, "my_shortcut.shortcut")
 ```
 
-## Schritt 2: Ausfuehren
+## Step 2: Run it
 
 ```bash
-python mein_kurzbefehl.py
+python my_shortcut.py
 ```
 
-**Das passiert jetzt:**
+**Here's what happens:**
 
-1. ✅ ShortcutsPy erstellt eine `.shortcut`-Datei
-2. ✅ Die Datei wird mit deiner Apple-ID signiert
-3. ✅ Die Kurzbefehle-App oeffnet sich
-4. ✅ Ein Import-Dialog erscheint
+1. ✅ ShortcutsPy creates a `.shortcut` file
+2. ✅ The file is signed with your Apple ID
+3. ✅ The Shortcuts app opens
+4. ✅ An import dialog appears
 
-## Schritt 3: Importieren
+## Step 3: Import
 
-- Klicke im Dialog auf **"Importieren"**
-- Der Kurzbefehl wird in der Kurzbefehle-App gespeichert
-- Du kannst ihn jetzt direkt ausfuehren!
+- Click **"Import"** in the dialog
+- The shortcut is saved in the Shortcuts app
+- You can run it right away!
 
 ---
 
-## Das Konzept verstehen
+## Understanding the Concept
 
-Der Code oben macht genau das, was du auch in der Kurzbefehle-App mit der Maus tun wuerdest:
+The code above does exactly what you would do manually in the Shortcuts app:
 
-1. **Shortcut erstellen** → `Shortcut("Name")`
-2. **Aktion hinzufuegen** → `Text(...)`
-3. **Aktion hinzufuegen** → `Notification(...)`
-4. **Alles zusammensetzen** → `.add(...)`
-5. **Installieren** → `install_shortcut(...)`
+1. **Create shortcut** → `Shortcut("Name")`
+2. **Add action** → `Text(...)`
+3. **Add action** → `Notification(...)`
+4. **Put it all together** → `.add(...)`
+5. **Install** → `install_shortcut(...)`
 
-In der Kurzbefehle-App sieht es so aus:
+In the Shortcuts app it looks like this:
 
 ```
 ┌─────────────────────────────┐
-│ Mein erster Kurzbefehl      │
+│ My First Shortcut           │
 ├─────────────────────────────┤
-│ [Text] Hallo aus Python!    │
+│ [Text] Hello from Python!   │
 │   ↓                         │
 │ [Notification]              │
 │   Title: ShortcutsPy        │
-│   Body: (Hallo aus Python!) │
+│   Body: (Hello from Python!)│
 └─────────────────────────────┘
 ```
 
 ---
 
-## Naechster Schritt: Benutzereingabe
+## Next Step: User Input
 
-Lassen uns den Kurzbefehl interaktiver machen:
+Let's make the shortcut more interactive:
 
 ```python
 from shortcutspy import Shortcut, Ask, ShowResult, install_shortcut
 
-shortcut = Shortcut("Persoenliche Begruessung")
+shortcut = Shortcut("Personal Greeting")
 
-# Benutzer fragen
-name = Ask(question="Wie heisst du?")
+# Ask the user
+name = Ask(question="What is your name?")
 
-# Die Antwort anzeigen
+# Show the answer
 result = ShowResult(name.output)
 
 shortcut.add(name, result)
-install_shortcut(shortcut, "begruendung.shortcut")
+install_shortcut(shortcut, "greeting.shortcut")
 ```
 
-Wenn du diesen Kurzbefehl ausfuehrst:
-1. Der Kurzbefehl fragt dich nach deinem Namen
-2. Du gibst einen Namen ein
-3. Der Name wird angezeigt
+When you run this shortcut:
+1. The shortcut asks for your name
+2. You enter a name
+3. The name is displayed
 
 ---
 
-## Noch ein Beispiel: Einfache Berechnung
+## Another Example: Simple Calculation
 
 ```python
 from shortcutspy import Shortcut, Ask, Calculate, ShowResult, install_shortcut
 
-shortcut = Shortcut("Verdoppeln")
+shortcut = Shortcut("Double It")
 
-# Zahl vom Benutzer erhalten
-number = Ask(question="Gib eine Zahl ein:")
+# Get a number from the user
+number = Ask(question="Enter a number:")
 
-# Verdoppeln (Zahl × 2)
+# Double it (number × 2)
 doubled = Calculate(number.output, operation="multiply", operand=2)
 
-# Ergebnis anzeigen
+# Show the result
 result = ShowResult(doubled.output)
 
 shortcut.add(number, doubled, result)
-install_shortcut(shortcut, "verdoppeln.shortcut")
+install_shortcut(shortcut, "double.shortcut")
 ```
 
 ---
 
-## Fehlerbehebung beim ersten Versuch
+## Troubleshooting Your First Attempt
 
-### Fehler: `ModuleNotFoundError: No module named 'shortcutspy'`
+### Error: `ModuleNotFoundError: No module named 'shortcutspy'`
 
-**Loesung:** Stelle sicher, dass ShortcutsPy installiert ist:
+**Solution:** Make sure ShortcutsPy is installed:
 ```bash
 pip install -e .
 ```
 
-### Fehler: `shortcuts: command not found` (macOS)
+### Error: `shortcuts: command not found` (macOS)
 
-**Loesung:** Die CLI sollte bereits auf macOS installiert sein. Versuche:
+**Solution:** The CLI should already be installed on macOS. Try:
 ```bash
 /usr/bin/shortcuts --version
 ```
 
-Wenn es immer noch nicht funktioniert, brauchst du macOS Monterey oder neuer.
+If it still doesn't work, you need macOS Monterey or newer.
 
-### Fehler: Kurzbefehle-App oeffnet sich, aber Import schlaegt fehl
+### Error: Shortcuts app opens but import fails
 
-**Loesung:**
-1. Stelle sicher, dass du in den Systemeinstellungen mit einer Apple-ID angemeldet bist
-2. Versuche die `.shortcut`-Datei manuell zu oeffnen
-3. Erlaube ShortcutsPy Zugriff auf die Kurzbefehle-App (falls gefragt)
-
----
-
-## Was ist der Unterschied zwischen diesen Begriffen?
-
-| Begriff | Bedeutung |
-|---------|-----------|
-| **Shortcut (Python-Objekt)** | Dein Kurzbefehl im Python-Code |
-| **shortcut.shortcut Datei** | Die exportierte Apple-Kurzbefehle-Datei (binary plist) |
-| **Kurzbefehl (in der App)** | Der importierte Kurzbefehl in deiner Kurzbefehle-App |
+**Solution:**
+1. Make sure you are signed in with an Apple ID in System Settings
+2. Try opening the `.shortcut` file manually
+3. Allow ShortcutsPy access to the Shortcuts app (if prompted)
 
 ---
 
-## Naechster Lernschritt
+## What's the Difference Between These Terms?
 
-Jetzt, da du die Basics verstanden hast:
+| Term | Meaning |
+|------|---------|
+| **Shortcut (Python object)** | Your shortcut in Python code |
+| **shortcut.shortcut file** | The exported Apple Shortcuts file (binary plist) |
+| **Shortcut (in the app)** | The imported shortcut in your Shortcuts app |
 
-1. **[Core Concepts](Core-Concepts)** — Lerne ueber Actions und Outputs
-2. **[FAQ](FAQ)** — Antworten auf haeufige Fragen
-3. **[Troubleshooting](Troubleshooting)** — Hilfe bei Problemen
+---
 
-Viel Spass!
+## Next Learning Step
+
+Now that you understand the basics:
+
+1. **[Core Concepts](Core-Concepts)** — Learn about actions and outputs
+2. **[FAQ](FAQ)** — Answers to common questions
+3. **[Troubleshooting](Troubleshooting)** — Help with problems
+
+Have fun!

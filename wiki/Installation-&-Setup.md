@@ -1,61 +1,60 @@
 # Installation & Setup
 
-Diese Seite fuehrt dich durch die vollstaendige Installation und Konfiguration von ShortcutsPy.
+This page guides you through the complete installation and configuration of ShortcutsPy.
 
-> **English?** → [Installation & Setup (EN)](Installation-&-Setup-EN)
 
-## Voraussetzungen
+## Prerequisites
 
-Bevor du startest, stelle sicher, dass du folgendes hast:
+Before you start, make sure you have the following:
 
-### Erforderlich
+### Required
 
-- **Python 3.10 oder neuer**
-  - [Python herunterladen](https://www.python.org/downloads/)
-  - Verifiziere die Installation: `python --version`
+- **Python 3.10 or newer**
+  - [Download Python](https://www.python.org/downloads/)
+  - Verify the installation: `python --version`
 
-### Fuer macOS (Signierung und Installation)
+### For macOS (signing and installation)
 
-- **macOS Monterey oder neuer**
-- **Kurzbefehle-App** (vorinstalliert auf macOS)
-- **Apple-ID** (zum Signieren von Shortcuts)
+- **macOS Monterey or newer**
+- **Shortcuts app** (pre-installed on macOS)
+- **Apple ID** (for signing shortcuts)
 
 ### Optional
 
-- **Ein Code-Editor** (VS Code, PyCharm, etc.) — optional aber empfohlen
-- **Git** — falls du das Repository klonen moechtest
+- **A code editor** (VS Code, PyCharm, etc.) — optional but recommended
+- **Git** — if you want to clone the repository
 
 ---
 
 ## Installation
 
-### Option 1: Vom GitHub-Repository (empfohlen)
+### Option 1: From the GitHub repository (recommended)
 
 ```bash
-# 1. Repository klonen
+# 1. Clone the repository
 git clone https://github.com/P00kil/Shortcutspy.git
 cd ShortcutsPy
 
-# 2. Im editable mode installieren (fuer Entwicklung)
+# 2. Install in editable mode (for development)
 pip install -e .
 
-# 3. Verifikation durchfuehren
-python -c "from shortcutspy import Shortcut; print('ShortcutsPy erfolgreich installiert!')"
+# 3. Verify the installation
+python -c "from shortcutspy import Shortcut; print('ShortcutsPy successfully installed!')"
 ```
 
-### Option 2: Direktes ZIP-Download
+### Option 2: Direct ZIP download
 
 ```bash
-# 1. ZIP herunterladen bei https://github.com/P00kil/Shortcutspy/archive/main.zip
-# 2. Entpacken
+# 1. Download ZIP from https://github.com/P00kil/Shortcutspy/archive/main.zip
+# 2. Extract
 unzip Shortcutspy-main.zip
 cd Shortcutspy-main
 
-# 3. Installieren
+# 3. Install
 pip install -e .
 ```
 
-### Option 3: Von PyPI (wenn veroeffentlicht)
+### Option 3: From PyPI (if published)
 
 ```bash
 pip install shortcutspy
@@ -63,86 +62,86 @@ pip install shortcutspy
 
 ---
 
-## Projekt-Struktur
+## Project Structure
 
-Nach der Installation sieht dein Projektordner so aus:
+After installation, your project folder looks like this:
 
 ```
 ShortcutsPy/
-├── shortcutspy/          # Haupt-Paket
+├── shortcutspy/          # Main package
 │   ├── __init__.py       # Imports
-│   ├── actions.py        # 150+ Aktionen
-│   ├── export.py         # Exportfunktionen
-│   ├── flow.py           # Kontrollfluss
-│   ├── shortcut.py       # Shortcut-Klasse
-│   └── types.py          # Typen
-├── examples/             # Beispiel-Scripts
-├── docs/                 # Dokumentation
+│   ├── actions.py        # 150+ actions
+│   ├── export.py         # Export functions
+│   ├── flow.py           # Control flow
+│   ├── shortcut.py       # Shortcut class
+│   └── types.py          # Types
+├── examples/             # Example scripts
+├── docs/                 # Documentation
 ├── tests/                # Tests
-├── README.md             # Projekt-README
-└── pyproject.toml        # Paket-Konfiguration
+├── README.md             # Project README
+└── pyproject.toml        # Package configuration
 ```
 
 ---
 
-## Erste Schritte
+## First Steps
 
-### 1. Erste Datei erstellen
+### 1. Create your first file
 
-Erstelle eine Datei `hello.py`:
+Create a file called `hello.py`:
 
 ```python
 from shortcutspy import Shortcut, Text, ShowResult, install_shortcut
 
-shortcut = Shortcut("Hallo Welt")
-text = Text("Hallo ShortcutsPy!")
+shortcut = Shortcut("Hello World")
+text = Text("Hello ShortcutsPy!")
 shortcut.add(text, ShowResult(text.output))
 
 install_shortcut(shortcut, "hello.shortcut")
 ```
 
-### 2. Ausfuehren
+### 2. Run it
 
 ```bash
 python hello.py
 ```
 
-Das sollte:
-1. Den Kurzbefehl erstellen
-2. Ihn signieren
-3. Die Kurzbefehle-App oeffnen
-4. Einen Import-Dialog anzeigen
+This should:
+1. Create the shortcut
+2. Sign it
+3. Open the Shortcuts app
+4. Show an import dialog
 
-### 3. In der Kurzbefehle-App importieren
+### 3. Import in the Shortcuts app
 
-- Klicke auf "Importieren" im Dialog
-- Der Kurzbefehl "Hallo Welt" wird automatisch hinzugefuegt
+- Click "Import" in the dialog
+- The shortcut "Hello World" will be added automatically
 
 ---
 
-## Haeufige Installationsprobleme
+## Common Installation Problems
 
-### Problem: `python` nicht gefunden
+### Problem: `python` not found
 
-**Loesung:**
-- Stelle sicher, dass Python installiert ist: `python3 --version`
-- Falls nur `python3` funktioniert, nutze `python3` statt `python`
+**Solution:**
+- Make sure Python is installed: `python3 --version`
+- If only `python3` works, use `python3` instead of `python`
 
 ### Problem: `pip: command not found`
 
-**Loesung:**
+**Solution:**
 ```bash
 python -m pip install -e .
 ```
 
-### Problem: Berechtigungsfehler bei der Installation
+### Problem: Permission error during installation
 
-**Loesung:**
+**Solution:**
 ```bash
 pip install --user -e .
 ```
 
-Oder mit virtual environment (empfohlen):
+Or with a virtual environment (recommended):
 
 ```bash
 python -m venv venv
@@ -150,56 +149,53 @@ source venv/bin/activate
 pip install -e .
 ```
 
-### Problem: `shortcuts sign` nicht gefunden (macOS)
+### Problem: `shortcuts sign` not found (macOS)
 
-**Loesung:**
-- Stelle sicher, dass du macOS Monterey+ hast
-- Die `shortcuts` CLI sollte bereits installiert sein
-- Falls nicht, pruefen mit: `which shortcuts`
+**Solution:**
+- Make sure you have macOS Monterey or newer
+- The `shortcuts` CLI should already be installed
+- If not, check with: `which shortcuts`
 
-Wenn fehlerhaft auf M1/M2 Mac, versuche:
+If it fails on M1/M2 Mac, try:
 ```bash
 /usr/bin/shortcuts --version
 ```
 
-### Problem: Fehlermeldung beim Import in die Kurzbefehle-App
+### Problem: Error when importing into the Shortcuts app
 
-**Loesung:**
-- Stelle sicher, dass du mit einer Apple-ID angemeldet bist (Systemeinstellungen → Apple-ID)
-- Versuche die `.shortcut`-Datei manuell zu oeffnen
-- Signiere manuell: `shortcuts sign -m anyone -i file.shortcut -o file_signed.shortcut`
+**Solution:**
+- Make sure you are signed in with an Apple ID (System Settings → Apple ID)
+- Try opening the `.shortcut` file manually
+- Sign manually: `shortcuts sign -m anyone -i file.shortcut -o file_signed.shortcut`
 
 ---
 
-## Virtual Environment (empfohlen)
+## Virtual Environment (recommended)
 
-Fuer ein isoliertes Setup verwenden viele Python-Entwickler virtual environments:
+For an isolated setup, many Python developers use virtual environments:
 
 ```bash
-# Virtual Environment erstellen
+# Create virtual environment
 python -m venv venv
 
-# Aktivieren
+# Activate
 # macOS/Linux:
 source venv/bin/activate
 # Windows:
 venv\Scripts\activate
 
-# Jetzt installieren
+# Now install
 pip install -e .
 
-# Deaktivieren mit
+# Deactivate with
 deactivate
 ```
 
 ---
 
-## Naechste Schritte
+## Next Steps
 
-Nachdem du installiert hast:
+After installation:
 
-1. Lese **[Getting Started](Getting-Started)** fuer dein erstes echtes Projekt
-2. Schau dir die **[Examples](../examples)** an
-3. Erkunde die **[Core Concepts](Core-Concepts)**
-
-Viel Erfolg!
+1. Read **[Getting Started](Getting-Started)** for your first real project
+2. Check out the **[Examples](../examples)**
