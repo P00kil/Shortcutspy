@@ -9,12 +9,12 @@ Verwendung:
     python decompile.py mein_kurzbefehl.shortcut --json   # zeigt auch das rohe JSON
 """
 
-import plistlib
-import json
 import argparse
 import inspect
-import sys
+import json
+import plistlib
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -239,7 +239,6 @@ def resolve_value(val: Any, uuid_to_varname: dict[str, str]) -> str:
             return repr(val)
 
     if isinstance(val, dict):
-        wf_type = val.get("Value", {})
         # Attachment / Token (Magic Variable Referenz)
         if "attachmentsByRange" in val:
             # NSAttributedString token format
@@ -310,9 +309,6 @@ def _resolve_token_string(value: Any, uuid_to_varname: dict[str, str]) -> str:
             first = next(iter(attachments.values()))
             return _resolve_attachment(first, uuid_to_varname)
         # Gemischt → als String mit Kommentar
-        resolved_parts = []
-        for key, att in attachments.items():
-            resolved_parts.append(_resolve_attachment(att, uuid_to_varname))
         comment = " # Mischung aus Text und Variablen – ggf. manuell anpassen"
         return repr(string_val) + comment
     return repr(str(value))
@@ -442,7 +438,6 @@ class Decompiler:
                 continue
 
             if cls_name == "__IF__":
-                group_id = params.get("GroupingIdentifier")
                 control_mode = params.get("WFControlFlowMode", 0)
 
                 if control_mode == 0:  # Öffnender If-Block
@@ -507,7 +502,6 @@ class Decompiler:
         then_actions, otherwise_actions = [], []
         current = then_actions
         i = start_idx + 1
-        depth = 1
         while i < len(actions):
             a = actions[i]
             p = a.get("WFWorkflowActionParameters", {})
@@ -546,7 +540,6 @@ class Decompiler:
         i = start_idx + 1
         while i < len(actions):
             a = actions[i]
-            ident = a.get("WFWorkflowActionIdentifier", "")
             p = a.get("WFWorkflowActionParameters", {})
             if p.get("GroupingIdentifier") == group_id:
                 mode = p.get("WFControlFlowMode", 0)

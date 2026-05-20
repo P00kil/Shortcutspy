@@ -7,11 +7,16 @@ muss auf dieses Pattern umgestellt werden.
 
 import os
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from shortcutspy import (
-    DictateText, If, Notification, Shortcut,
-    install_shortcut, save_json,
+    DictateText,
+    If,
+    Notification,
+    Shortcut,
+    install_shortcut,
+    save_json,
 )
 
 

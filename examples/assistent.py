@@ -16,8 +16,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from shortcutspy import (
-    AddNewEvent,
-    AddReminder,
+    URL,
     Comment,
     DictateText,
     GetDictionaryValue,
@@ -30,12 +29,11 @@ from shortcutspy import (
     Notification,
     OpenURL,
     RawAction,
-    Shortcut,
     SetClipboard,
     SetVariable,
+    Shortcut,
     ShowResult,
     SpeakText,
-    URL,
     install_shortcut,
     save_json,
 )

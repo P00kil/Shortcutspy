@@ -13,20 +13,20 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.dictatetext",
       "WFWorkflowActionParameters": {
-        "UUID": "A9B3F681-434F-42C3-B1C3-8A8A97FC5C1C"
+        "UUID": "0C88D72B-F881-4729-B6BA-AC25C7EBA2CA"
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "1E60EA34-BE5E-400D-9FF0-129125B86AA4",
+        "GroupingIdentifier": "7EA54576-9C57-41EF-8A03-A10E940C5999",
         "WFControlFlowMode": 0,
         "WFCondition": 4,
         "WFInput": {
           "Type": "Variable",
           "Variable": {
             "Value": {
-              "OutputUUID": "A9B3F681-434F-42C3-B1C3-8A8A97FC5C1C",
+              "OutputUUID": "0C88D72B-F881-4729-B6BA-AC25C7EBA2CA",
               "Type": "ActionOutput",
               "OutputName": "Diktierter Text"
             },
@@ -41,13 +41,13 @@
       "WFWorkflowActionParameters": {
         "WFNotificationActionBody": "Text enthielt 'hallo' ✓",
         "WFNotificationActionTitle": "If-Test",
-        "UUID": "0620E2CA-5706-4286-AF88-786B92CCB56B"
+        "UUID": "E818FC76-F759-40A7-BDDE-EA6ECFA2F941"
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "1E60EA34-BE5E-400D-9FF0-129125B86AA4",
+        "GroupingIdentifier": "7EA54576-9C57-41EF-8A03-A10E940C5999",
         "WFControlFlowMode": 1
       }
     },
@@ -56,15 +56,15 @@
       "WFWorkflowActionParameters": {
         "WFNotificationActionBody": "Text enthielt NICHT 'hallo'",
         "WFNotificationActionTitle": "If-Test",
-        "UUID": "F1863E10-937C-4DA5-AB3D-8A821488A0E6"
+        "UUID": "BF6EB401-1B50-4A65-BC89-D38984811184"
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "1E60EA34-BE5E-400D-9FF0-129125B86AA4",
+        "GroupingIdentifier": "7EA54576-9C57-41EF-8A03-A10E940C5999",
         "WFControlFlowMode": 2,
-        "UUID": "42ABB90B-18A3-48DF-8D97-4DD1E9C022F5"
+        "UUID": "DED51B02-5E42-46EA-A748-C727DE585034"
       }
     }
   ],
