@@ -69,6 +69,7 @@ SYSTEM_PROMPT = (
 
 # ── Helpers: Text mit ActionOutput-Token bauen ───────────────────────────────
 
+
 def _wf_str(value: str) -> dict:
     return {"Value": {"string": value}, "WFSerializationType": "WFTextTokenString"}
 
@@ -95,15 +96,20 @@ def _lokally_body(prompt_action: Action) -> dict:
     """JSON-Body für Ollama/LokallyAI – referenziert prompt_action.output direkt."""
     return {
         "Value": [
-            {"WFKey": _wf_str("model"),  "WFValue": _wf_str(LOKALLYAI_MODEL),                         "WFItemType": 0},
-            {"WFKey": _wf_str("prompt"), "WFValue": prompt_action.output.as_text_token(),             "WFItemType": 0},
-            {"WFKey": _wf_str("stream"), "WFValue": _wf_str("false"),                                 "WFItemType": 0},
+            {"WFKey": _wf_str("model"), "WFValue": _wf_str(LOKALLYAI_MODEL), "WFItemType": 0},
+            {
+                "WFKey": _wf_str("prompt"),
+                "WFValue": prompt_action.output.as_text_token(),
+                "WFItemType": 0,
+            },
+            {"WFKey": _wf_str("stream"), "WFValue": _wf_str("false"), "WFItemType": 0},
         ],
         "WFSerializationType": "WFDictionaryFieldValue",
     }
 
 
 # ── Schnellbefehl-Routing (keyword-basiert, ohne KI) ─────────────────────────
+
 
 def _build_keyword_routing(dictate: Action) -> list:
     """
@@ -122,19 +128,19 @@ def _build_keyword_routing(dictate: Action) -> list:
     actions.extend([default_text, set_default])
 
     keyword_rules: list[tuple[str, str, str]] = [
-        ("kalender",      "kalender_neu",     "befehl"),
-        ("termin",        "kalender_neu",     "befehl"),
-        ("erinner",       "erinnerung_neu",   "befehl"),
-        ("notiz",         "notiz_neu",        "befehl"),
-        ("dateien",       "dateien",          "leer"),
-        ("ordner",        "dateien",          "leer"),
-        ("gesundheit",    "gesundheit",       "leer"),
-        ("schritte",      "gesundheit",       "leer"),
-        ("suche",         "websuche",         "befehl"),
-        ("google",        "websuche",         "befehl"),
-        ("nächst",        "kalender_info",    "leer"),
-        ("anstehend",     "kalender_info",    "leer"),
-        ("aufgaben",      "erinnerung_info",  "leer"),
+        ("kalender", "kalender_neu", "befehl"),
+        ("termin", "kalender_neu", "befehl"),
+        ("erinner", "erinnerung_neu", "befehl"),
+        ("notiz", "notiz_neu", "befehl"),
+        ("dateien", "dateien", "leer"),
+        ("ordner", "dateien", "leer"),
+        ("gesundheit", "gesundheit", "leer"),
+        ("schritte", "gesundheit", "leer"),
+        ("suche", "websuche", "befehl"),
+        ("google", "websuche", "befehl"),
+        ("nächst", "kalender_info", "leer"),
+        ("anstehend", "kalender_info", "leer"),
+        ("aufgaben", "erinnerung_info", "leer"),
     ]
 
     for kw, action_typ, titel_strat in keyword_rules:
@@ -152,8 +158,8 @@ def _build_keyword_routing(dictate: Action) -> list:
             )
         set_response = SetVariable("ki_antwort", response_text.output)
         check = If(
-            input=dictate,         # direkte ActionOutput-Referenz – KEIN GetVariable nötig
-            condition=4,           # Enthält
+            input=dictate,  # direkte ActionOutput-Referenz – KEIN GetVariable nötig
+            condition=4,  # Enthält
             value=kw,
         ).then(response_text, set_response)
         actions.append(check)
@@ -163,14 +169,17 @@ def _build_keyword_routing(dictate: Action) -> list:
 
 # ── Hauptaufbau ──────────────────────────────────────────────────────────────
 
+
 def build() -> Shortcut:
     sc = Shortcut(SHORTCUT_NAME)
     sc.set_icon(color=4292093695, glyph=59511)
 
-    sc.add(Comment(
-        "Assistent v1.2 | Schnellbefehl (offline) ODER LokallyAI (Ollama-API)\n"
-        "Diktat → Routing über ActionOutput-Referenzen (Magic Variables)"
-    ))
+    sc.add(
+        Comment(
+            "Assistent v1.2 | Schnellbefehl (offline) ODER LokallyAI (Ollama-API)\n"
+            "Diktat → Routing über ActionOutput-Referenzen (Magic Variables)"
+        )
+    )
 
     # 1) Diktat (Magic Variable: dictate.output, OutputName='Diktierter Text')
     dictate = DictateText()
@@ -216,10 +225,10 @@ def build() -> Shortcut:
         WFTextSeparator="Eigenes",
         WFTextCustomSeparator="|",
     )
-    get_aktion  = GetItemFromList(split.output, index=1)
-    get_titel   = GetItemFromList(split.output, index=2)
-    get_datum   = GetItemFromList(split.output, index=3)
-    get_inhalt  = GetItemFromList(split.output, index=5)
+    get_aktion = GetItemFromList(split.output, index=1)
+    get_titel = GetItemFromList(split.output, index=2)
+    get_datum = GetItemFromList(split.output, index=3)
+    get_inhalt = GetItemFromList(split.output, index=5)
 
     sc.add(get_antwort, split, get_aktion, get_titel, get_datum, get_inhalt)
 
@@ -238,15 +247,22 @@ def build() -> Shortcut:
         WFCalendarItemStartDate=parse_date.output.as_attachment(),
     )
     notify_event = Notification(body=get_titel, title="Termin erstellt")
-    sc.add(If(input=get_aktion, condition=4, value="kalender_neu").then(
-        parse_date, new_event, notify_event,
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="kalender_neu").then(
+            parse_date,
+            new_event,
+            notify_event,
+        )
+    )
 
     # KALENDER LESEN
     upcoming = GetUpcomingEvents(count=5)
-    sc.add(If(input=get_aktion, condition=4, value="kalender_info").then(
-        upcoming, ShowResult(upcoming.output),
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="kalender_info").then(
+            upcoming,
+            ShowResult(upcoming.output),
+        )
+    )
 
     # ERINNERUNG ERSTELLEN
     new_rem = RawAction(
@@ -254,53 +270,69 @@ def build() -> Shortcut:
         output_name="Neue Erinnerung",
         WFReminderText=get_titel.output.as_text_token(),
     )
-    sc.add(If(input=get_aktion, condition=4, value="erinnerung_neu").then(
-        new_rem, Notification(body=get_titel, title="Erinnerung erstellt"),
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="erinnerung_neu").then(
+            new_rem,
+            Notification(body=get_titel, title="Erinnerung erstellt"),
+        )
+    )
 
     # ERINNERUNGEN LESEN
     rem_list = GetUpcomingReminders(count=10)
-    sc.add(If(input=get_aktion, condition=4, value="erinnerung_info").then(
-        rem_list, ShowResult(rem_list.output),
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="erinnerung_info").then(
+            rem_list,
+            ShowResult(rem_list.output),
+        )
+    )
 
     # NOTIZ (Clipboard + Notes-App öffnen)
     url_notes = URL("mobilenotes://")
-    sc.add(If(input=get_aktion, condition=4, value="notiz_neu").then(
-        SetClipboard(get_inhalt),
-        url_notes,
-        OpenURL(url_notes),
-        Notification(body="Inhalt in Zwischenablage – bitte einfügen", title=get_titel),
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="notiz_neu").then(
+            SetClipboard(get_inhalt),
+            url_notes,
+            OpenURL(url_notes),
+            Notification(body="Inhalt in Zwischenablage – bitte einfügen", title=get_titel),
+        )
+    )
 
     # DATEIEN
     url_files = URL("shareddocuments://")
-    sc.add(If(input=get_aktion, condition=4, value="dateien").then(
-        url_files,
-        OpenURL(url_files),
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="dateien").then(
+            url_files,
+            OpenURL(url_files),
+        )
+    )
 
     # GESUNDHEIT
     url_health = URL("x-apple-health://")
-    sc.add(If(input=get_aktion, condition=4, value="gesundheit").then(
-        url_health,
-        OpenURL(url_health),
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="gesundheit").then(
+            url_health,
+            OpenURL(url_health),
+        )
+    )
 
     # WEBSUCHE
-    sc.add(If(input=get_aktion, condition=4, value="websuche").then(
-        RawAction(
-            "is.workflow.actions.searchweb",
-            WFSearchWebDestination="Google",
-            WFInputText=get_inhalt.output.as_text_token(),
-        ),
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="websuche").then(
+            RawAction(
+                "is.workflow.actions.searchweb",
+                WFSearchWebDestination="Google",
+                WFInputText=get_inhalt.output.as_text_token(),
+            ),
+        )
+    )
 
     # ALLGEMEINE ANTWORT
-    sc.add(If(input=get_aktion, condition=4, value="antwort").then(
-        ShowResult(get_antwort.output),
-        SpeakText(get_antwort.output, rate=0.55),
-    ))
+    sc.add(
+        If(input=get_aktion, condition=4, value="antwort").then(
+            ShowResult(get_antwort.output),
+            SpeakText(get_antwort.output, rate=0.55),
+        )
+    )
 
     return sc
 

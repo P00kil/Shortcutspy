@@ -293,9 +293,7 @@ class Decompiler:
             for cls in ("Variable", "CurrentDate")
             if any(re.search(rf"(?<![A-Za-z0-9_]){cls}\(", line) for line in self.lines)
         }
-        all_imports = sorted(
-            self.imports_needed | type_imports | {"Shortcut", "install_shortcut"}
-        )
+        all_imports = sorted(self.imports_needed | type_imports | {"Shortcut", "install_shortcut"})
         import_lines = [
             "from shortcutspy import (",
             *[f"    {name}," for name in all_imports],
