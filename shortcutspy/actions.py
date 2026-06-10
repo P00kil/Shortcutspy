@@ -69,8 +69,8 @@ class Ask(Action):
 class Alert(Action):
     identifier = "is.workflow.actions.alert"
 
-    def __init__(self, title: str = "", message: Any = None, show_cancel: bool = True):
-        params: dict[str, Any] = {"WFAlertActionTitle": title}
+    def __init__(self, title: Any = "", message: Any = None, show_cancel: bool = True):
+        params: dict[str, Any] = {"WFAlertActionTitle": _resolve_text(title)}
         if message is not None:
             params["WFAlertActionMessage"] = _resolve_text(message)
         if not show_cancel:
@@ -82,12 +82,12 @@ class Notification(Action):
     identifier = "is.workflow.actions.notification"
     output_name = "Benachrichtigung"
 
-    def __init__(self, body: Any = None, title: str = ""):
+    def __init__(self, body: Any = None, title: Any = ""):
         params: dict[str, Any] = {}
         if body is not None:
             params["WFNotificationActionBody"] = _resolve_text(body)
         if title:
-            params["WFNotificationActionTitle"] = title
+            params["WFNotificationActionTitle"] = _resolve_text(title)
         super().__init__(**params)
 
 
@@ -132,12 +132,31 @@ class Text(Action):
         super().__init__(WFTextActionText=_resolve_text(text))
 
 
+_TEXT_SEPARATOR_TYPES = {
+    "Neue Zeile",
+    "Leerzeichen",
+    "Jedes Zeichen",
+    "Beliebige Leerzeichen",
+    "Eigenes",
+    "New Lines",
+    "Spaces",
+    "Every Character",
+    "Custom",
+}
+
+
 class SplitText(Action):
     identifier = "is.workflow.actions.text.split"
     output_name = "Text aufteilen"
 
     def __init__(self, text: Any = None, separator: str = "Neue Zeile"):
-        params: dict[str, Any] = {"WFTextSeparator": separator}
+        params: dict[str, Any] = {}
+        if separator in _TEXT_SEPARATOR_TYPES:
+            params["WFTextSeparator"] = separator
+        else:
+            # Beliebiges Zeichen → als Custom-Separator behandeln
+            params["WFTextSeparator"] = "Eigenes"
+            params["WFTextCustomSeparator"] = separator
         if text is not None:
             params["text"] = _resolve(text)
         super().__init__(**params)
@@ -148,7 +167,12 @@ class CombineText(Action):
     output_name = "Kombinierter Text"
 
     def __init__(self, text: Any = None, separator: str = "Neue Zeile"):
-        params: dict[str, Any] = {"WFTextCombineString": separator}
+        params: dict[str, Any] = {}
+        if separator in _TEXT_SEPARATOR_TYPES:
+            params["WFTextSeparator"] = separator
+        else:
+            params["WFTextSeparator"] = "Eigenes"
+            params["WFTextCustomSeparator"] = separator
         if text is not None:
             params["text"] = _resolve(text)
         super().__init__(**params)
@@ -1396,15 +1420,10 @@ class RunShellScript(Action):
     identifier = "is.workflow.actions.runshellscript"
     output_name = "Shell-Skriptergebnis"
 
-    def __init__(self, script: str = "", shell: str = "/bin/zsh", input: Any = None,
-                 input_mode: str = "to stdin", run_as_root: bool = False):
-        params: dict[str, Any] = {"Script": _resolve_text(script), "Shell": shell}
+    def __init__(self, script: str = "", shell: str = "/bin/zsh", input: Any = None):
+        params: dict[str, Any] = {"WFShellScript": script, "WFShellScriptShell": shell}
         if input is not None:
-            params["Input"] = _resolve(input)
-        if input_mode != "to stdin":
-            params["InputMode"] = input_mode
-        if run_as_root:
-            params["RunAsRoot"] = True
+            params["WFInput"] = _resolve(input)
         super().__init__(**params)
 
 
@@ -1470,10 +1489,10 @@ class AddNewEvent(Action):
     identifier = "is.workflow.actions.addnewevent"
     output_name = "Neues Ereignis"
 
-    def __init__(self, title: str = "", start_date: Any = None, end_date: Any = None, calendar: str = ""):
+    def __init__(self, title: Any = "", start_date: Any = None, end_date: Any = None, calendar: str = ""):
         params: dict[str, Any] = {}
         if title:
-            params["WFCalendarItemTitle"] = title
+            params["WFCalendarItemTitle"] = _resolve_text(title)
         if start_date is not None:
             params["WFCalendarItemStartDate"] = _resolve(start_date)
         if end_date is not None:
@@ -1495,10 +1514,10 @@ class AddReminder(Action):
     identifier = "is.workflow.actions.addnewreminder"
     output_name = "Neue Erinnerung"
 
-    def __init__(self, title: str = "", list_name: str = ""):
+    def __init__(self, title: Any = "", list_name: str = ""):
         params: dict[str, Any] = {}
         if title:
-            params["WFReminderText"] = title
+            params["WFReminderText"] = _resolve_text(title)
         if list_name:
             params["WFReminderList"] = list_name
         super().__init__(**params)
@@ -1682,7 +1701,7 @@ def _resolve(value: Any) -> Any:
     if isinstance(value, CurrentDate):
         return value.as_attachment()
     if isinstance(value, Variable):
-        return value.as_variable()
+        return value.as_attachment()
     return value
 
 

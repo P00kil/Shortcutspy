@@ -52,6 +52,27 @@ _META_PARAM_KEYS = {"UUID", "CustomOutputName", "GroupingIdentifier", "WFControl
 _PROBE_DENYLIST = {"IntentAppDefinition"}
 
 
+def _build_action_map() -> dict[str, tuple[str, dict[str, str]]]:
+    """Baut die ACTION_MAP dynamisch aus actions.py + manuellen Param-Maps."""
+    result: dict[str, tuple[str, dict[str, str]]] = {}
+    for name, cls in inspect.getmembers(_actions_module, inspect.isclass):
+        if not issubclass(cls, _actions_module.Action) or cls is _actions_module.Action:
+            continue
+        if name in ("RawAction", "AppIntentAction"):
+            continue
+        ident = getattr(cls, "identifier", "")
+        if not ident:
+            continue
+        result[ident] = (name, _PARAM_MAPS.get(ident, {}))
+    # Control-Flow-Marker einfügen
+    for ident, marker in _CONTROL_FLOW.items():
+        result[ident] = (marker, {})
+    return result
+
+
+ACTION_MAP: dict[str, tuple[str, dict[str, str]]] = _build_action_map()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # ACTION_MAP automatisch aus actions.py ableiten
 #
@@ -296,7 +317,6 @@ class Decompiler:
             import_lines.append("from shortcutspy import (")
             for name in all_imports:
                 import_lines.append(f"    {name},")
-            import_lines.append("    Shortcut, install_shortcut,")
             import_lines.append(")")
         else:
             import_lines.append("from shortcutspy import Shortcut, install_shortcut")

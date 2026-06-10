@@ -44,13 +44,19 @@ class If(_FlowBlock):
 
     def collect(self) -> list[dict[str, Any]]:
         result: list[dict[str, Any]] = []
+
         params: dict[str, Any] = {
             "GroupingIdentifier": self.group_id,
             "WFControlFlowMode": 0,
             "WFCondition": self.condition,
         }
         if self.input is not None:
-            params["WFInput"] = _resolve(self.input)
+            # iOS-Conditional-WFInput hat eine spezielle Wrapper-Struktur:
+            #   {Type: "Variable", Variable: <standard-attachment-or-token>}
+            # Andere Aktionen (SetVariable, RepeatEach) nutzen das flache
+            # Attachment-Format direkt – das macht diese Wrap-Logik nur hier.
+            resolved = _resolve(self.input)
+            params["WFInput"] = {"Type": "Variable", "Variable": resolved}
         if self.value is not None:
             params["WFConditionalActionString"] = str(self.value)
         result.append(

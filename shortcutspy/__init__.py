@@ -1,6 +1,6 @@
 """ShortcutsPy public API."""
 
-from .actions import *  # noqa: F403
+from .actions import *  # noqa: F403  -- intentional re-export of all Action classes
 from .export import (
     install_shortcut,
     save_actions_json,
