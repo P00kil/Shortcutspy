@@ -63,8 +63,7 @@ def _require_shortcuts_cli() -> None:
         )
 
 
-def sign_shortcut(input_path: str, output_path: str | None = None,
-                  mode: str = "anyone") -> Path:
+def sign_shortcut(input_path: str, output_path: str | None = None, mode: str = "anyone") -> Path:
     """Sign a .shortcut file using the macOS shortcuts CLI.
 
     Returns the path to the signed file.
@@ -78,13 +77,13 @@ def sign_shortcut(input_path: str, output_path: str | None = None,
         dst = Path(output_path)
     subprocess.run(
         ["shortcuts", "sign", "-m", mode, "-i", str(src), "-o", str(dst)],
-        check=True, capture_output=True,
+        check=True,
+        capture_output=True,
     )
     return dst
 
 
-def install_shortcut(shortcut: Shortcut, path: str,
-                     mode: str = "anyone") -> Path:
+def install_shortcut(shortcut: Shortcut, path: str, mode: str = "anyone") -> Path:
     """Build, sign, and open a shortcut in the Shortcuts app.
 
     This is the all-in-one function: it writes the unsigned plist,

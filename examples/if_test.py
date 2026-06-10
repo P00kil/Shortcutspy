@@ -27,14 +27,14 @@ def build() -> Shortcut:
     dictate = DictateText()
 
     # If mit DIREKTER ActionOutput-Referenz (kein GetVariable nötig)
-    check = If(
-        input=dictate,          # → _resolve(Action) liefert ActionOutput-Attachment
-        condition=4,            # Enthält
-        value="hallo",
-    ).then(
-        Notification("Text enthielt 'hallo' ✓", title="If-Test")
-    ).otherwise(
-        Notification("Text enthielt NICHT 'hallo'", title="If-Test")
+    check = (
+        If(
+            input=dictate,  # → _resolve(Action) liefert ActionOutput-Attachment
+            condition=4,  # Enthält
+            value="hallo",
+        )
+        .then(Notification("Text enthielt 'hallo' ✓", title="If-Test"))
+        .otherwise(Notification("Text enthielt NICHT 'hallo'", title="If-Test"))
     )
 
     sc.add(dictate, check)

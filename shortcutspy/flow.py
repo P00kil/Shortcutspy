@@ -66,7 +66,9 @@ class If(_FlowBlock):
             }
         )
         for action in self.then_actions:
-            result.extend(action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()])
+            result.extend(
+                action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()]
+            )
         result.append(
             {
                 "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
@@ -77,7 +79,9 @@ class If(_FlowBlock):
             }
         )
         for action in self.otherwise_actions:
-            result.extend(action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()])
+            result.extend(
+                action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()]
+            )
         result.append(
             {
                 "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
@@ -135,7 +139,9 @@ class Menu(_FlowBlock):
                 }
             )
             for action in actions:
-                result.extend(action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()])
+                result.extend(
+                    action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()]
+                )
         result.append(
             {
                 "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
@@ -178,7 +184,9 @@ class RepeatCount(_FlowBlock):
             }
         ]
         for action in self.body_actions:
-            result.extend(action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()])
+            result.extend(
+                action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()]
+            )
         result.append(
             {
                 "WFWorkflowActionIdentifier": "is.workflow.actions.repeat.count",
@@ -223,7 +231,9 @@ class RepeatEach(_FlowBlock):
             }
         ]
         for action in self.body_actions:
-            result.extend(action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()])
+            result.extend(
+                action.collect() if isinstance(action, _FlowBlock) else [action.to_dict()]
+            )
         result.append(
             {
                 "WFWorkflowActionIdentifier": "is.workflow.actions.repeat.each",

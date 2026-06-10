@@ -1,6 +1,5 @@
 """Tests for control flow blocks."""
 
-
 from shortcutspy import ShowResult, Text
 from shortcutspy.flow import If, Menu, RepeatCount, RepeatEach
 

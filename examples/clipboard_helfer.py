@@ -31,36 +31,45 @@ def build_shortcut() -> Shortcut:
 
     open_source = GetClipboard()
     detected_link = DetectLink(open_source.output)
-    open_if_url = If(detected_link.output, condition=100).then(
-        OpenURL(detected_link.output),
-    ).otherwise(
-        Alert(
-            "Keine URL gefunden",
-            message="Die Zwischenablage enthaelt aktuell keine oeffnungsfaehige URL.",
-            show_cancel=False,
+    open_if_url = (
+        If(detected_link.output, condition=100)
+        .then(
+            OpenURL(detected_link.output),
+        )
+        .otherwise(
+            Alert(
+                "Keine URL gefunden",
+                message="Die Zwischenablage enthaelt aktuell keine oeffnungsfaehige URL.",
+                show_cancel=False,
+            )
         )
     )
 
-    menu = Menu(prompt="Was soll mit der Zwischenablage passieren?").option(
-        "Anzeigen",
-        show_clipboard,
-        ShowResult(show_clipboard.output),
-    ).option(
-        "Trimmen und grossschreiben",
-        trim_source,
-        trimmed,
-        uppercase,
-        SetClipboard(uppercase.output),
-        Notification(
-            body="Die bereinigte Version liegt jetzt in der Zwischenablage.",
-            title="Clipboard Helfer",
-        ),
-        ShowResult(uppercase.output),
-    ).option(
-        "URL oeffnen",
-        open_source,
-        detected_link,
-        open_if_url,
+    menu = (
+        Menu(prompt="Was soll mit der Zwischenablage passieren?")
+        .option(
+            "Anzeigen",
+            show_clipboard,
+            ShowResult(show_clipboard.output),
+        )
+        .option(
+            "Trimmen und grossschreiben",
+            trim_source,
+            trimmed,
+            uppercase,
+            SetClipboard(uppercase.output),
+            Notification(
+                body="Die bereinigte Version liegt jetzt in der Zwischenablage.",
+                title="Clipboard Helfer",
+            ),
+            ShowResult(uppercase.output),
+        )
+        .option(
+            "URL oeffnen",
+            open_source,
+            detected_link,
+            open_if_url,
+        )
     )
 
     shortcut.add(
