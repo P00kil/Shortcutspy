@@ -6,7 +6,6 @@ from __future__ import annotations
 import inspect
 import sys
 from pathlib import Path
-from typing import Any, get_type_hints
 
 # Ensure project root is on sys.path
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,7 +30,8 @@ CATEGORIES: dict[str, list[str]] = {
     ],
     "Text": [
         "Text", "SplitText", "CombineText", "ReplaceText", "MatchText",
-        "ChangeCase", "TrimWhitespace", "DetectText",
+        "GetMatchGroup", "ChangeCase", "TrimWhitespace", "DetectText",
+        "CountItems",
     ],
     "Numbers & Math": [
         "Number", "RandomNumber", "Calculate", "CalculateExpression",
@@ -44,6 +44,7 @@ CATEGORIES: dict[str, list[str]] = {
     "Lists & Dictionaries": [
         "List", "ChooseFromList", "GetItemFromList",
         "Dictionary", "GetDictionaryValue", "SetDictionaryValue",
+        "DetectDictionary",
     ],
     "Web & URLs": [
         "URL", "DownloadURL", "GetURLComponent", "URLEncode",
@@ -59,7 +60,7 @@ CATEGORIES: dict[str, list[str]] = {
     "Images": [
         "ConvertImage", "ResizeImage", "CropImage", "RotateImage",
         "FlipImage", "CombineImages", "OverlayText", "RemoveBackground",
-        "ExtractTextFromImage", "MakeGIF",
+        "ExtractTextFromImage", "MakeGIF", "GetImagesFromInput",
     ],
     "Photos & Camera": [
         "TakePhoto", "TakeScreenshot", "SelectPhotos",
@@ -83,8 +84,10 @@ CATEGORIES: dict[str, list[str]] = {
     ],
     "Device & System": [
         "GetDeviceDetails", "GetBatteryLevel", "SetBrightness",
-        "SetWifi", "SetBluetooth", "SetAppearance", "LockScreen",
-        "OpenApp", "GetIPAddress", "GetWiFiNetwork", "GetOnScreenContent",
+        "SetWifi", "SetBluetooth", "SetAirplaneMode", "SetLowPowerMode",
+        "SetFlashlight", "Vibrate", "StartTimer", "SetAppearance",
+        "LockScreen", "OpenApp", "GetIPAddress", "GetWiFiNetwork",
+        "GetOnScreenContent",
     ],
     "User Interaction": [
         "ShowResult", "Ask", "Alert", "Notification", "Comment",
@@ -95,16 +98,18 @@ CATEGORIES: dict[str, list[str]] = {
     ],
     "Location & Maps": [
         "GetCurrentLocation", "GetDistance", "GetDirections", "SearchMaps",
+        "DetectAddress",
     ],
     "Calendar & Reminders": [
         "AddNewEvent", "GetUpcomingEvents", "AddReminder",
         "GetUpcomingReminders",
     ],
     "Contacts": [
-        "SelectContacts", "AddNewContact",
+        "SelectContacts", "AddNewContact", "DetectPhoneNumber",
+        "DetectEmailAddress",
     ],
     "Encoding & Hashing": [
-        "Base64Encode", "Hash", "GenerateBarcode",
+        "Base64Encode", "Hash", "GenerateBarcode", "ScanQRCode",
     ],
     "Item Properties": [
         "GetItemName", "GetItemType", "SetItemName",
@@ -263,6 +268,14 @@ RepeatEach(input=my_list)
     return "\n".join(lines)
 
 
+def _count_action_classes() -> int:
+    return sum(
+        1
+        for _, obj in inspect.getmembers(actions, inspect.isclass)
+        if issubclass(obj, actions.Action) and obj.__name__ != "Action"
+    )
+
+
 def generate() -> str:
     """Generate the full Actions.md content."""
     lines: list[str] = []
@@ -271,7 +284,7 @@ def generate() -> str:
     lines.append("> **Auto-generated** from `shortcutspy/actions.py` and `shortcutspy/flow.py`.")
     lines.append("> Run `python automation/generate_actions_doc.py` to regenerate.")
     lines.append("")
-    lines.append("ShortcutsPy provides **150 action classes** and **4 control flow blocks** ")
+    lines.append(f"ShortcutsPy provides **{_count_action_classes()} action classes** and **4 control flow blocks** ")
     lines.append("that map directly to Apple Shortcuts actions.")
     lines.append("")
     lines.append("All actions accept `ActionOutput`, `Variable`, or `CurrentDate` objects ")

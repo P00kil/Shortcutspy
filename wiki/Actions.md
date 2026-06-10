@@ -3,7 +3,7 @@
 > **Auto-generated** from `shortcutspy/actions.py` and `shortcutspy/flow.py`.
 > Run `python automation/generate_actions_doc.py` to regenerate.
 
-ShortcutsPy provides **150 action classes** and **4 control flow blocks** 
+ShortcutsPy provides **163 action classes** and **4 control flow blocks** 
 that map directly to Apple Shortcuts actions.
 
 All actions accept `ActionOutput`, `Variable`, or `CurrentDate` objects 
@@ -321,6 +321,21 @@ ReplaceText()
 MatchText()
 ```
 
+### `GetMatchGroup`
+
+**Identifier:** `is.workflow.actions.text.match.getgroup`
+**Output:** Übereinstimmungsgruppe
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `matches` | `Any` | `None` |
+| `group_index` | `int` | `1` |
+| `group_type` | `str` | `"Group At Index"` |
+
+```python
+GetMatchGroup()
+```
+
 ### `ChangeCase`
 
 **Identifier:** `is.workflow.actions.text.changecase`
@@ -359,6 +374,20 @@ TrimWhitespace()
 
 ```python
 DetectText()
+```
+
+### `CountItems`
+
+**Identifier:** `is.workflow.actions.count`
+**Output:** Anzahl
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `input` | `Any` | `None` |
+| `count_type` | `str` | `"Items"` |
+
+```python
+CountItems()
 ```
 
 ---
@@ -602,7 +631,8 @@ ChooseFromList()
 | Parameter | Type | Default |
 |-----------|------|---------|
 | `input` | `Any` | `None` |
-| `index` | `int` | `1` |
+| `index` | `Any` | `1` |
+| `specifier` | `str` | `"Item At Index"` |
 
 ```python
 GetItemFromList()
@@ -648,6 +678,19 @@ GetDictionaryValue()
 
 ```python
 SetDictionaryValue()
+```
+
+### `DetectDictionary`
+
+**Identifier:** `is.workflow.actions.detect.dictionary`
+**Output:** Wörterbuch
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `input` | `Any` | `None` |
+
+```python
+DetectDictionary()
 ```
 
 ---
@@ -1127,6 +1170,19 @@ ExtractTextFromImage()
 
 ```python
 MakeGIF()
+```
+
+### `GetImagesFromInput`
+
+**Identifier:** `is.workflow.actions.detect.images`
+**Output:** Bilder
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `input` | `Any` | `None` |
+
+```python
+GetImagesFromInput()
 ```
 
 ---
@@ -1614,6 +1670,67 @@ SetWifi()
 SetBluetooth()
 ```
 
+### `SetAirplaneMode`
+
+**Identifier:** `is.workflow.actions.airplanemode.set`
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `on` | `bool` | `True` |
+
+```python
+SetAirplaneMode()
+```
+
+### `SetLowPowerMode`
+
+**Identifier:** `is.workflow.actions.lowpowermode.set`
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `on` | `bool` | `True` |
+
+```python
+SetLowPowerMode()
+```
+
+### `SetFlashlight`
+
+**Identifier:** `is.workflow.actions.flashlight`
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `setting` | `str` | `"On"` |
+
+```python
+SetFlashlight()
+```
+
+### `Vibrate`
+
+**Identifier:** `is.workflow.actions.vibrate`
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `params` | `Any` | *(required)* |
+
+```python
+Vibrate(params="...")
+```
+
+### `StartTimer`
+
+**Identifier:** `is.workflow.actions.timer.start`
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `value` | `float` | `5` |
+| `unit` | `str` | `"min"` |
+
+```python
+StartTimer()
+```
+
 ### `SetAppearance`
 
 **Identifier:** `is.workflow.actions.appearance`
@@ -1897,6 +2014,19 @@ GetDirections()
 SearchMaps()
 ```
 
+### `DetectAddress`
+
+**Identifier:** `is.workflow.actions.detect.address`
+**Output:** Adressen
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `input` | `Any` | `None` |
+
+```python
+DetectAddress()
+```
+
 ---
 
 ## Calendar & Reminders
@@ -1987,6 +2117,32 @@ SelectContacts(params="...")
 AddNewContact(params="...")
 ```
 
+### `DetectPhoneNumber`
+
+**Identifier:** `is.workflow.actions.detect.phonenumber`
+**Output:** Telefonnummern
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `input` | `Any` | `None` |
+
+```python
+DetectPhoneNumber()
+```
+
+### `DetectEmailAddress`
+
+**Identifier:** `is.workflow.actions.detect.emailaddress`
+**Output:** E-Mail-Adressen
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `input` | `Any` | `None` |
+
+```python
+DetectEmailAddress()
+```
+
 ---
 
 ## Encoding & Hashing
@@ -2030,6 +2186,19 @@ Hash()
 
 ```python
 GenerateBarcode()
+```
+
+### `ScanQRCode`
+
+**Identifier:** `is.workflow.actions.scanbarcode`
+**Output:** QR/Barcode
+
+| Parameter | Type | Default |
+|-----------|------|---------|
+| `params` | `Any` | *(required)* |
+
+```python
+ScanQRCode(params="...")
 ```
 
 ---

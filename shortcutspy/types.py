@@ -85,11 +85,8 @@ class Variable:
 
     def as_variable(self) -> dict:
         return {
-            "Type": "Variable",
-            "Variable": {
-                "Value": {"string": self.name},
-                "WFSerializationType": "WFTextTokenString",
-            },
+            "Value": {"Type": "Variable", "VariableName": self.name},
+            "WFSerializationType": "WFTextTokenAttachment",
         }
 
     def as_text_token(self) -> dict:

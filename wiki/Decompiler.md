@@ -1,6 +1,6 @@
 # Decompiler: Convert Existing Shortcuts into Python
 
-With `shortcutspy/decompile.py`, you can read an existing `.shortcut` file and generate readable ShortcutsPy code from it.
+With the decompiler, you can read an existing `.shortcut` file and generate readable ShortcutsPy code from it.
 
 This is useful when you want to:
 
@@ -19,7 +19,7 @@ This is useful when you want to:
 From the project directory:
 
 ```bash
-python shortcutspy/decompile.py my_shortcut.shortcut
+python -m shortcutspy.decompile my_shortcut.shortcut
 ```
 
 By default, the generated Python code is written to `stdout`.
@@ -27,13 +27,14 @@ By default, the generated Python code is written to `stdout`.
 If you want to write it directly to a file:
 
 ```bash
-python shortcutspy/decompile.py my_shortcut.shortcut -o decompiled.py
+python -m shortcutspy.decompile my_shortcut.shortcut -o decompiled.py
 ```
 
-You can also run the script as a module:
+After installing the package (`pip install .`), the `shortcutspy-decompile`
+command is available directly:
 
 ```bash
-python -m shortcutspy.decompile my_shortcut.shortcut -o decompiled.py
+shortcutspy-decompile my_shortcut.shortcut -o decompiled.py
 ```
 
 ---
@@ -44,7 +45,7 @@ With `--json`, the decompiler also prints the raw plist structure.
 This is useful when you want to inspect new or not yet fully mapped actions.
 
 ```bash
-python shortcutspy/decompile.py my_shortcut.shortcut --json
+python -m shortcutspy.decompile my_shortcut.shortcut --json
 ```
 
 ---
@@ -54,7 +55,7 @@ python shortcutspy/decompile.py my_shortcut.shortcut --json
 Assume you have an existing shortcut called `note.shortcut`:
 
 ```bash
-python shortcutspy/decompile.py note.shortcut -o note.py
+python -m shortcutspy.decompile note.shortcut -o note.py
 ```
 
 Part of the generated output could look like this:
@@ -83,10 +84,14 @@ After that, you can adjust the generated code, extend it, and export it again as
 
 ## What the Decompiler Recognizes
 
-- many standard actions from text, lists, files, URLs, clipboard, date, media, and sharing
+- **every action class that ShortcutsPy provides** — the mapping from Apple
+  identifiers to Python classes and constructor arguments is derived
+  automatically from the library itself at import time, so it can never get
+  out of sync with `actions.py`
 - control flow such as `If`, `Menu`, `RepeatCount`, and `RepeatEach`
-- magic variables and output references via `.output`
-- simple variable references such as `Variable("name")`
+- magic variables and output references via `.output` (including outputs of
+  control flow blocks)
+- named variable references such as `Variable("name")`
 
 ---
 
@@ -94,13 +99,17 @@ After that, you can adjust the generated code, extend it, and export it again as
 
 ### Unknown Actions
 
-If an action is not yet mapped in `ACTION_MAP`, the decompiler emits a `RawAction(...)`.
-That way, the action is not lost even if it is not yet mapped cleanly to a ShortcutsPy class.
+If an action identifier is not covered by any ShortcutsPy class, the decompiler
+emits a `RawAction(...)` with all simple parameters preserved as keyword
+arguments. That way, the action is not lost even if it is not modeled
+explicitly.
 
 ### Mixed Text Tokens
 
-If a text value contains both plain text and embedded variables, the output may be rendered as a string plus a comment.
-These places are worth checking after decompilation.
+If a text value contains both plain text and embedded variables, only the plain
+text portion is preserved — the embedded tokens cannot be represented 1:1.
+These places are worth checking after decompilation (use `--json` to inspect
+the original token structure).
 
 ### No Lossless Round-Trip Guarantee
 

@@ -37,23 +37,19 @@ for name, data in cursor.fetchall():
 
 ### Python-Umgebung
 
-- `.venv` mit Python 3.10 im Repo-Root
-- **Kein** `pip install -e .` verwenden – Python 3.10 überspringt `.pth`-Dateien die mit `__` beginnen. Stattdessen: `pip install .`
-- Tests: `.venv/bin/python -m pytest tests/ -q`
+- Python 3.10+ erforderlich
+- Installation: `pip install .` (oder `pip install -e ".[dev]"` für Entwicklung)
+- Tests: `python -m pytest tests/ -q`
 - Linting: `ruff check .`
 
 ## Projektstruktur
 
-- `shortcutspy/actions.py` – 150+ Action-Klassen (Text, RunShellScript, If, etc.)
+- `shortcutspy/actions.py` – 160+ Action-Klassen (Text, RunShellScript, etc.)
+- `shortcutspy/flow.py` – Kontrollfluss (If, Menu, RepeatCount, RepeatEach)
 - `shortcutspy/export.py` – save_shortcut, sign_shortcut, install_shortcut
 - `shortcutspy/decompile.py` – .shortcut → Python-Code Decompiler
-- `shortcutspy/flow.py` – Kontrollfluss (If, Menu, Repeat)
+  - Die Identifier→Klasse-Zuordnung (`ACTION_MAP`) wird automatisch per
+    Introspektion aus `actions.py` abgeleitet – nicht von Hand pflegen!
 - `shortcutspy/types.py` – ActionOutput, Variable, CurrentDate
-- `tests/` – 40 Tests (pytest)
+- `tests/` – pytest-Testsuite (inkl. Decompiler-Roundtrip-Tests)
 - `examples/` – Demo-Skripte
-
-## Zwei Quellverzeichnisse
-
-- `/Users/kilianhandy/Documents/ShortcutsPy` – Haupt-Arbeitsverzeichnis (dieses Repo)
-- `/Users/kilianhandy/ShortcutsPy` – Ältere Kopie (hat `.venv` mit Python 3.14 + pyobjc)
-- `/Users/kilianhandy/Shortcutspy_Kopie` – Backup-Kopie einer eventuell älteren Version
