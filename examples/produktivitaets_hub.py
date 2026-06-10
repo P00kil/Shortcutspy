@@ -12,9 +12,7 @@ from shortcutspy import (
     Alert,
     Ask,
     Comment,
-    CurrentDate,
     Delay,
-    FormatDate,
     GetBatteryLevel,
     GetDeviceDetails,
     GetIPAddress,
@@ -36,9 +34,6 @@ from shortcutspy import (
 def build() -> Shortcut:
     shortcut = Shortcut("Produktivitaets-Hub")
     shortcut.set_icon(color=431817727, glyph=59771)
-
-    # ── Datum holen ──────────────────────────────────────────────
-    datum = FormatDate(CurrentDate(), format_string="dd.MM.yyyy HH:mm")
 
     # ── 1. Schnellnotiz ─────────────────────────────────────────
     notiz_ask = Ask(question="Was moechtest du dir notieren?")
@@ -80,7 +75,7 @@ def build() -> Shortcut:
         "Das Glueck deines Lebens haengt von der Beschaffenheit deiner Gedanken ab. – Marc Aurel",
     ])
     zitat_zufall = RandomNumber(minimum=1, maximum=7)
-    zitat_pick = GetItemFromList(zitate.output, index=1)
+    zitat_pick = GetItemFromList(zitate.output, index=zitat_zufall.output)
     zitat_anzeige = Alert(
         "💡 Dein Zitat fuer heute",
         message=zitat_pick.output,
@@ -135,7 +130,6 @@ def build() -> Shortcut:
 
     shortcut.add(
         Comment("Produktivitaets-Hub: Dein digitales Schweizer Taschenmesser 🔧"),
-        datum,
         menu,
     )
     return shortcut

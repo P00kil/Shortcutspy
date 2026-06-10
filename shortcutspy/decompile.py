@@ -3,11 +3,19 @@ decompile.py – ShortcutsPy Decompiler
 ======================================
 Wandelt eine .shortcut-Datei (Binary Plist) in lesbaren ShortcutsPy-Python-Code um.
 
+Die Zuordnung von Action-Identifiern zu Python-Klassen und Konstruktor-Argumenten
+wird beim Import automatisch aus ``shortcutspy.actions`` abgeleitet. Dadurch kann
+die Zuordnung nicht von der Bibliothek abweichen: Jede Klasse, die in actions.py
+existiert, wird erkannt – und nur Argumente, die der Konstruktor wirklich
+akzeptiert, werden generiert.
+
 Verwendung:
-    python decompile.py mein_kurzbefehl.shortcut
-    python decompile.py mein_kurzbefehl.shortcut -o ausgabe.py
-    python decompile.py mein_kurzbefehl.shortcut --json   # zeigt auch das rohe JSON
+    python -m shortcutspy.decompile mein_kurzbefehl.shortcut
+    python -m shortcutspy.decompile mein_kurzbefehl.shortcut -o ausgabe.py
+    python -m shortcutspy.decompile mein_kurzbefehl.shortcut --json
 """
+
+from __future__ import annotations
 
 import argparse
 import inspect
@@ -18,169 +26,30 @@ import sys
 from pathlib import Path
 from typing import Any
 
-try:
-    from . import actions as _actions_module
-except ImportError:
-    # Direkter Aufruf als Skript: füge Parent-Dir zum Pfad hinzu
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from shortcutspy import actions as _actions_module  # type: ignore
-
+from . import actions as _actions
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Mapping: WFWorkflowActionIdentifier → (ShortcutsPy-Klasse, Param-Mapping)
-#
-# Param-Mapping: {plist_key: python_kwarg}
-# Spezialwerte für plist_key:
-#   "@text"  → WFTextActionText  (Textaktion)
-#   "@input" → WFInput           (generischer Input)
+# Kontrollfluss-Identifier (werden separat behandelt, nicht als normale Action)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Manuelle Param-Maps (plist_key → python_kwarg) für Aktionen, deren Mapping
-# nicht aus dem Action-Identifier ableitbar ist.  Wird mit der automatischen
-# Auto-Discovery aus actions.py kombiniert.
-# ─────────────────────────────────────────────────────────────────────────────
+IF_IDENTIFIER = "is.workflow.actions.conditional"
+MENU_IDENTIFIER = "is.workflow.actions.choosefrommenu"
+REPEAT_COUNT_IDENTIFIER = "is.workflow.actions.repeat.count"
+REPEAT_EACH_IDENTIFIER = "is.workflow.actions.repeat.each"
 
-_PARAM_MAPS: dict[str, dict[str, str]] = {
-    "is.workflow.actions.gettext":              {"WFTextActionText": "text"},
-    "is.workflow.actions.showresult":           {"Text": "text"},
-    "is.workflow.actions.ask":                  {"WFAskActionPrompt": "question", "WFAskActionDefaultAnswer": "default_answer", "WFInputType": "input_type"},
-    "is.workflow.actions.alert":                {"WFAlertActionTitle": "title", "WFAlertActionMessage": "message", "WFAlertActionCancelButtonShown": "show_cancel"},
-    "is.workflow.actions.notification":         {"WFNotificationActionBody": "body", "WFNotificationActionTitle": "title"},
-    "is.workflow.actions.setvariable":          {"WFVariableName": "name", "WFInput": "input"},
-    "is.workflow.actions.getvariable":          {"WFVariable": "name"},
-    "is.workflow.actions.appendvariable":       {"WFVariableName": "name", "WFInput": "input"},
-    "is.workflow.actions.text.split":           {"text": "text", "WFTextSeparator": "separator", "WFTextCustomSeparator": "custom_separator"},
-    "is.workflow.actions.text.combine":         {"text": "text", "WFTextSeparator": "separator", "WFTextCustomSeparator": "custom_separator"},
-    "is.workflow.actions.text.match":           {"text": "text", "WFMatchTextPattern": "pattern"},
-    "is.workflow.actions.text.changecase":      {"text": "text", "WFCaseType": "case"},
-    "is.workflow.actions.text.replace":         {"WFInput": "input", "WFReplaceTextFind": "find", "WFReplaceTextReplace": "replace", "WFReplaceTextRegularExpression": "regex"},
-    "is.workflow.actions.text.trimwhitespace":  {"WFInput": "input"},
-    "is.workflow.actions.detect.text":          {"WFInput": "input"},
-    "is.workflow.actions.number":               {"WFNumberActionNumber": "value"},
-    "is.workflow.actions.number.random":        {"WFRandomNumberMinimum": "minimum", "WFRandomNumberMaximum": "maximum"},
-    "is.workflow.actions.math":                 {"WFInput": "input", "WFMathOperation": "operation", "WFMathOperand": "operand"},
-    "is.workflow.actions.calculateexpression":  {"Input": "expression"},
-    "is.workflow.actions.round":                {"WFInput": "input", "WFRoundMode": "mode"},
-    "is.workflow.actions.statistics":           {"Input": "input", "WFStatisticsOperation": "operation"},
-    "is.workflow.actions.format.number":        {"WFNumber": "number", "WFNumberFormatDecimalPlaces": "decimal_places"},
-    "is.workflow.actions.detect.number":        {"WFInput": "input"},
-    "is.workflow.actions.date":                 {"WFDateActionDate": "date_string"},
-    "is.workflow.actions.format.date":          {"WFDate": "date", "WFDateFormat": "format_string"},
-    "is.workflow.actions.adjustdate":           {"WFDate": "date", "WFDuration": "duration"},
-    "is.workflow.actions.gettimebetweendates":  {"WFInput": "input", "WFTimeUntilFromDate": "from_date", "WFTimeUntilUnit": "unit"},
-    "is.workflow.actions.detect.date":          {"WFInput": "input"},
-    "is.workflow.actions.converttimezone":      {"Date": "date", "WFTimeZone": "timezone"},
-    "is.workflow.actions.list":                 {"WFItems": "items"},
-    "is.workflow.actions.choosefromlist":       {"WFInput": "input", "WFChooseFromListActionPrompt": "prompt"},
-    "is.workflow.actions.getitemfromlist":      {"WFInput": "input", "WFItemIndex": "index", "WFItemSpecifier": "specifier"},
-    "is.workflow.actions.dictionary":           {"WFItems": "items"},
-    "is.workflow.actions.getvalueforkey":       {"WFInput": "input", "WFDictionaryKey": "key"},
-    "is.workflow.actions.setvalueforkey":       {"WFDictionary": "dictionary", "WFDictionaryKey": "key", "WFDictionaryValue": "value"},
-    "is.workflow.actions.url":                  {"WFURLActionURL": "url"},
-    "is.workflow.actions.downloadurl":          {"WFURL": "url", "WFHTTPMethod": "method", "WFHTTPHeaders": "headers"},
-    "is.workflow.actions.geturlcomponent":      {"WFURL": "url", "WFURLComponent": "component"},
-    "is.workflow.actions.urlencode":            {"WFInput": "input", "WFEncodeMode": "mode"},
-    "is.workflow.actions.url.expand":           {"URL": "url"},
-    "is.workflow.actions.url.getheaders":       {"WFInput": "input"},
-    "is.workflow.actions.getwebpagecontents":   {"WFInput": "input"},
-    "is.workflow.actions.detect.link":          {"WFInput": "input"},
-    "is.workflow.actions.file":                 {"WFFilePath": "path"},
-    "is.workflow.actions.file.select":          {},
-    "is.workflow.actions.documentpicker.save":  {"WFInput": "input", "WFFileDestinationPath": "path"},
-    "is.workflow.actions.file.delete":          {"WFInput": "input"},
-    "is.workflow.actions.file.move":            {"WFFile": "file", "WFFileDestinationPath": "destination"},
-    "is.workflow.actions.file.rename":          {"WFFile": "file", "WFNewFilename": "name"},
-    "is.workflow.actions.file.createfolder":    {"WFFilePath": "path"},
-    "is.workflow.actions.file.getfoldercontents": {"WFFolder": "folder", "Recursive": "recursive"},
-    "is.workflow.actions.file.append":          {"WFInput": "input", "WFFilePath": "path"},
-    "is.workflow.actions.makezip":              {"WFInput": "input", "WFZIPName": "name"},
-    "is.workflow.actions.unzip":                {"WFArchive": "archive"},
-    "is.workflow.actions.takephoto":            {},
-    "is.workflow.actions.takescreenshot":       {},
-    "is.workflow.actions.selectphoto":          {},
-    "is.workflow.actions.savetocameraroll":     {"WFInput": "input", "WFCameraRollSelectedGroup": "album"},
-    "is.workflow.actions.image.convert":        {"WFImageFormat": "format", "WFImageCompressionQuality": "quality"},
-    "is.workflow.actions.image.resize":         {"WFImage": "image", "WFImageResizeWidth": "width", "WFImageResizeHeight": "height"},
-    "is.workflow.actions.image.crop":           {"WFInput": "input", "WFImageCropX": "x", "WFImageCropY": "y", "WFImageCropWidth": "width", "WFImageCropHeight": "height"},
-    "is.workflow.actions.image.rotate":         {"WFImage": "image", "WFImageRotateAmount": "degrees"},
-    "is.workflow.actions.image.flip":           {"WFInput": "input", "WFImageFlipDirection": "direction"},
-    "is.workflow.actions.image.combine":        {"WFInput": "input", "WFImageCombineMode": "mode", "WFImageCombineSpacing": "spacing"},
-    "is.workflow.actions.overlaytext":          {"WFImage": "image", "WFOverlayTextText": "text"},
-    "is.workflow.actions.image.removebackground": {"WFInput": "input"},
-    "is.workflow.actions.extracttextfromimage": {"WFImage": "image"},
-    "is.workflow.actions.makegif":              {"WFInput": "input", "WFMakeGIFActionDelayTime": "seconds_per_photo"},
-    "is.workflow.actions.makepdf":              {"WFInput": "input"},
-    "is.workflow.actions.gettextfrompdf":       {"WFInput": "input"},
-    "is.workflow.actions.splitpdf":             {"WFInput": "input"},
-    "is.workflow.actions.compresspdf":          {"WFInput": "input"},
-    "is.workflow.actions.speaktext":            {"WFText": "text", "WFSpeakTextRate": "rate"},
-    "is.workflow.actions.playsound":            {"WFInput": "input"},
-    "is.workflow.actions.detectlanguage":       {"WFInput": "input"},
-    "is.workflow.actions.text.translate":       {"WFInputText": "text", "WFTranslateTextLanguage": "to_language"},
-    "is.workflow.actions.encodemedia":          {"WFMedia": "media"},
-    "is.workflow.actions.trimvideo":            {"WFInputMedia": "input"},
-    "is.workflow.actions.playmusic":            {"WFMediaItems": "music"},
-    "is.workflow.actions.pausemusic":           {"WFPlayPauseBehavior": "behavior"},
-    "is.workflow.actions.setvolume":            {"WFVolume": "volume"},
-    "is.workflow.actions.getdevicedetails":     {"WFDeviceDetail": "detail"},
-    "is.workflow.actions.setbrightness":        {"WFBrightness": "brightness"},
-    "is.workflow.actions.wifi.set":             {"OnValue": "on"},
-    "is.workflow.actions.bluetooth.set":        {"OnValue": "on"},
-    "is.workflow.actions.appearance":           {"WFAppearance": "style"},
-    "is.workflow.actions.openapp":              {"WFAppIdentifier": "app_id"},
-    "is.workflow.actions.delay":                {"WFDelayTime": "seconds"},
-    "is.workflow.actions.output":               {"WFOutput": "output"},
-    "is.workflow.actions.getdistance":          {"WFGetDistanceDestination": "destination"},
-    "is.workflow.actions.getdirections":        {"WFDestination": "destination", "WFGetDirectionsActionMode": "mode"},
-    "is.workflow.actions.searchmaps":           {"WFInput": "input"},
-    "is.workflow.actions.setclipboard":         {"WFInput": "input"},
-    "is.workflow.actions.share":                {"WFInput": "input"},
-    "is.workflow.actions.searchweb":            {"WFInputText": "query", "WFSearchWebDestination": "engine"},
-    "is.workflow.actions.openurl":              {"WFInput": "url"},
-    "is.workflow.actions.showwebpage":          {"WFURL": "url"},
-    "is.workflow.actions.getarticle":           {"WFWebPage": "webpage"},
-    "is.workflow.actions.rss":                  {"WFRSSFeedURL": "url", "WFRSSItemQuantity": "count"},
-    "is.workflow.actions.runjavascriptonwebpage": {"WFJavaScript": "script"},
-    "is.workflow.actions.base64encode":         {"WFInput": "input", "WFEncodeMode": "mode"},
-    "is.workflow.actions.hash":                 {"WFInput": "input", "WFHashType": "algorithm"},
-    "is.workflow.actions.generatebarcode":      {"WFText": "text"},
-    "is.workflow.actions.runshellscript":       {"WFShellScript": "script", "WFShellScriptShell": "shell", "WFInput": "input"},
-    "is.workflow.actions.runapplescript":       {"WFAppleScript": "script"},
-    "is.workflow.actions.runjavascriptforautomation": {"WFJavaScript": "script", "Input": "input"},
-    "is.workflow.actions.runworkflow":          {"WFWorkflowName": "name", "WFInput": "input"},
-    "is.workflow.actions.openxcallbackurl":     {"WFXCallbackURL": "url"},
-    "is.workflow.actions.addnewevent":          {"WFCalendarItemTitle": "title", "WFCalendarItemStartDate": "start_date", "WFCalendarItemEndDate": "end_date", "WFCalendarItemCalendar": "calendar"},
-    "is.workflow.actions.getupcomingevents":    {"WFGetUpcomingItemCount": "count"},
-    "is.workflow.actions.addnewreminder":       {"WFReminderText": "title", "WFReminderList": "list_name"},
-    "is.workflow.actions.getupcomingreminders": {"WFGetUpcomingItemCount": "count"},
-    "is.workflow.actions.getitemname":          {"WFInput": "input"},
-    "is.workflow.actions.getitemtype":          {"WFInput": "input"},
-    "is.workflow.actions.setitemname":          {"WFInput": "input", "WFName": "name"},
-    "is.workflow.actions.previewdocument":      {"WFInput": "input"},
-    "is.workflow.actions.print":                {"WFInput": "input"},
-    "is.workflow.actions.format.filesize":      {"WFFileSize": "file_size", "WFFileSizeFormat": "format"},
-    "is.workflow.actions.gethtmlfromrichtext":  {"WFInput": "input"},
-    "is.workflow.actions.getmarkdownfromrichtext": {"WFInput": "input"},
-    "is.workflow.actions.getrichtextfromhtml":  {"WFHTML": "html"},
-    "is.workflow.actions.getrichtextfrommarkdown": {"WFInput": "input"},
-    "is.workflow.actions.measurement.create":   {"WFMeasurementUnitType": "unit", "WFMeasurementValue": "value"},
-    "is.workflow.actions.measurement.convert":  {"WFInput": "input", "WFMeasurementUnit": "to_unit"},
-    "is.workflow.actions.sendmessage":          {"WFSendMessageContent": "content", "WFSendMessageActionRecipients": "recipients"},
-    "is.workflow.actions.sendemail":            {"WFSendEmailActionToRecipients": "to", "WFSendEmailActionSubject": "subject", "WFSendEmailActionInputAttachments": "body"},
-    "is.workflow.actions.airdropdocument":      {"WFInput": "input"},
-    "is.workflow.actions.runsshscript":         {"WFSSHScript": "script", "WFSSHHost": "host", "WFSSHPort": "port", "WFSSHUser": "user", "WFSSHPassword": "password"},
-    "is.workflow.actions.comment":              {"WFCommentActionText": "text"},
+CONTROL_FLOW = {
+    IF_IDENTIFIER,
+    MENU_IDENTIFIER,
+    REPEAT_COUNT_IDENTIFIER,
+    REPEAT_EACH_IDENTIFIER,
 }
 
-# Control-Flow Marker (werden separat behandelt)
-_CONTROL_FLOW: dict[str, str] = {
-    "is.workflow.actions.conditional":      "__IF__",
-    "is.workflow.actions.choosefrommenu":   "__MENU__",
-    "is.workflow.actions.repeat.count":     "__REPEAT_COUNT__",
-    "is.workflow.actions.repeat.each":      "__REPEAT_EACH__",
-    "is.workflow.actions.nothing":          "__NOTHING__",
-}
+# Plist-Keys, die keine inhaltlichen Parameter sind
+_META_PARAM_KEYS = {"UUID", "CustomOutputName", "GroupingIdentifier", "WFControlFlowMode"}
+
+# Keys, die Konstruktoren immer schreiben (Boilerplate) und die deshalb beim
+# automatischen Ableiten der Parameter-Zuordnung ignoriert werden
+_PROBE_DENYLIST = {"IntentAppDefinition"}
 
 
 def _build_action_map() -> dict[str, tuple[str, dict[str, str]]]:
@@ -205,69 +74,136 @@ ACTION_MAP: dict[str, tuple[str, dict[str, str]]] = _build_action_map()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Hilfsfunktionen
+# ACTION_MAP automatisch aus actions.py ableiten
+#
+# Für jede Action-Klasse wird per Sentinel-Wert ermittelt, in welchen Plist-Key
+# jedes Konstruktor-Argument geschrieben wird. Ergebnis:
+#   {identifier: (klassenname, {plist_key: ctor_kwarg})}
 # ─────────────────────────────────────────────────────────────────────────────
 
-def to_var_name(uuid: str) -> str:
-    """Kürzt eine UUID zu einem lesbaren Variablennamen."""
-    return "var_" + uuid.replace("-", "")[:8]
+_SENTINEL_STR = "\u2063ShortcutsPySentinel\u2063"
+_SENTINEL_NUM = 73501.25
 
+
+def _matches(value: Any, sentinel: Any) -> bool:
+    if isinstance(sentinel, bool):
+        return isinstance(value, bool) and value == sentinel
+    if isinstance(sentinel, float):
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and value == sentinel
+    return value == sentinel
+
+
+def _contains(value: Any, sentinel: Any) -> bool:
+    if _matches(value, sentinel):
+        return True
+    if isinstance(value, dict):
+        return any(_contains(v, sentinel) for v in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_contains(v, sentinel) for v in value)
+    return False
+
+
+def _ctor_params(cls: type) -> list[tuple[str, inspect.Parameter]]:
+    sig = inspect.signature(cls.__init__)
+    return [
+        (name, p)
+        for name, p in sig.parameters.items()
+        if name != "self" and p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY)
+    ]
+
+
+def _probe_param_key(cls: type, params: list[tuple[str, inspect.Parameter]], target: str) -> str | None:
+    """Ermittelt, in welchen Plist-Key der Konstruktor das Argument `target` schreibt."""
+    required = [n for n, p in params if p.default is inspect.Parameter.empty]
+    base = {n: "x" for n in required}
+    for sentinel in (_SENTINEL_STR, _SENTINEL_NUM, True, False):
+        kwargs = dict(base)
+        kwargs[target] = sentinel
+        try:
+            probed = cls(**kwargs).params
+        except Exception:
+            continue
+        if isinstance(sentinel, bool):
+            try:
+                baseline = cls(**base).params
+            except Exception:
+                baseline = {}
+            candidates = [
+                k for k, v in probed.items()
+                if k not in baseline and _contains(v, sentinel)
+            ]
+        else:
+            candidates = [k for k, v in probed.items() if _contains(v, sentinel)]
+        candidates = [k for k in candidates if k not in _PROBE_DENYLIST]
+        if candidates:
+            return candidates[0]
+    return None
+
+
+def _derive_action_map() -> dict[str, tuple[str, dict[str, str]]]:
+    mapping: dict[str, tuple[str, dict[str, str]]] = {}
+    for name, cls in inspect.getmembers(_actions, inspect.isclass):
+        if not issubclass(cls, _actions.Action):
+            continue
+        if cls in (_actions.Action, _actions.RawAction, _actions.AppIntentAction):
+            continue
+        identifier = cls.identifier
+        if not identifier or identifier in CONTROL_FLOW:
+            continue
+        params = _ctor_params(cls)
+        param_map: dict[str, str] = {}
+        for pname, _ in params:
+            key = _probe_param_key(cls, params, pname)
+            if key:
+                param_map.setdefault(key, pname)
+        mapping[identifier] = (name, param_map)
+    return mapping
+
+
+ACTION_MAP: dict[str, tuple[str, dict[str, str]]] = _derive_action_map()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Werte aus dem Plist in Python-Ausdrücke übersetzen
+# ─────────────────────────────────────────────────────────────────────────────
 
 def resolve_value(val: Any, uuid_to_varname: dict[str, str]) -> str:
-    """
-    Wandelt einen Plist-Wert in einen Python-Ausdruck um.
-    Unterstützt: Strings, Zahlen, Booleans, Token-Strukturen (Magic Variables).
-    """
+    """Wandelt einen Plist-Wert in einen gültigen Python-Ausdruck um."""
     if val is None:
         return "None"
 
     if isinstance(val, bool):
         return "True" if val else "False"
 
-    if isinstance(val, (int, float)):
-        return repr(val)
-
-    if isinstance(val, str):
+    if isinstance(val, (int, float, str)):
         return repr(val)
 
     if isinstance(val, bytes):
-        # Könnte ein weiteres Plist sein
         try:
-            inner = plistlib.loads(val)
-            return resolve_value(inner, uuid_to_varname)
+            return resolve_value(plistlib.loads(val), uuid_to_varname)
         except Exception:
             return repr(val)
 
     if isinstance(val, dict):
-        # Attachment / Token (Magic Variable Referenz)
         if "attachmentsByRange" in val:
-            # NSAttributedString token format
-            attachments = val.get("attachmentsByRange", {})
-            if attachments:
-                # Nimm den ersten Attachment
-                first = next(iter(attachments.values()))
-                return _resolve_attachment(first, uuid_to_varname)
-            # Kein Attachment → reiner Text
-            string_val = val.get("string", "")
-            return repr(string_val)
+            return _resolve_token_string(val, uuid_to_varname)
 
-        # Simples WFValue dict
-        if "Value" in val and "WFSerializationType" in val:
+        if "WFSerializationType" in val:
             serialization_type = val.get("WFSerializationType", "")
-            inner_val = val.get("Value", {})
+            inner = val.get("Value")
             if serialization_type == "WFTextTokenString":
-                return _resolve_token_string(inner_val, uuid_to_varname)
-            if serialization_type == "WFNumberSubstitutableState":
-                return resolve_value(inner_val, uuid_to_varname)
-            if serialization_type == "WFDictionaryFieldValue":
-                return resolve_value(inner_val, uuid_to_varname)
-            if serialization_type == "WFArrayParameterState":
-                if isinstance(inner_val, list):
-                    items = [resolve_value(i, uuid_to_varname) for i in inner_val]
-                    return "[" + ", ".join(items) + "]"
-            return resolve_value(inner_val, uuid_to_varname)
+                return _resolve_token_string(inner, uuid_to_varname)
+            if serialization_type == "WFTextTokenAttachment" and isinstance(inner, dict):
+                return _resolve_attachment(inner, uuid_to_varname)
+            if serialization_type == "WFArrayParameterState" and isinstance(inner, list):
+                items = [resolve_value(i, uuid_to_varname) for i in inner]
+                return "[" + ", ".join(items) + "]"
+            return resolve_value(inner, uuid_to_varname)
 
-        return repr(str(val))
+        if "OutputUUID" in val or "VariableName" in val or "Type" in val:
+            return _resolve_attachment(val, uuid_to_varname)
+
+        return repr(_plist_to_json(val))
 
     if isinstance(val, list):
         items = [resolve_value(i, uuid_to_varname) for i in val]
@@ -277,26 +213,22 @@ def resolve_value(val: Any, uuid_to_varname: dict[str, str]) -> str:
 
 
 def _resolve_attachment(attachment: dict, uuid_to_varname: dict[str, str]) -> str:
-    """Löst einen Attachment-Eintrag zu einem Python-Ausdruck auf."""
-    output_uuid = attachment.get("OutputUUID") or attachment.get("outputUUID")
-    var_name = attachment.get("VariableName") or attachment.get("variableName")
-    agg_type = attachment.get("Type") or attachment.get("type", "")
+    """Löst eine Magic-Variable-Referenz zu einem Python-Ausdruck auf."""
+    output_uuid = attachment.get("OutputUUID")
+    var_name = attachment.get("VariableName")
+    agg_type = attachment.get("Type", "")
 
     if output_uuid and output_uuid in uuid_to_varname:
         return f"{uuid_to_varname[output_uuid]}.output"
     if var_name:
-        return f'Variable("{var_name}")'
+        return f"Variable({var_name!r})"
     if agg_type == "CurrentDate":
         return "CurrentDate()"
-    if agg_type == "Ask":
-        return "# AskEachTime"
-    if output_uuid:
-        return f"# output:{output_uuid[:8]}"
-    return repr(attachment)
+    return "None"
 
 
 def _resolve_token_string(value: Any, uuid_to_varname: dict[str, str]) -> str:
-    """Löst einen WFTextTokenString (kann Text + Tokens mischen) auf."""
+    """Löst einen WFTextTokenString (Text, ggf. mit eingebetteten Tokens) auf."""
     if isinstance(value, str):
         return repr(value)
     if isinstance(value, dict):
@@ -305,13 +237,30 @@ def _resolve_token_string(value: Any, uuid_to_varname: dict[str, str]) -> str:
         if not attachments:
             return repr(string_val)
         if len(attachments) == 1 and string_val.strip() in ("", "\ufffc"):
-            # Nur ein Token, kein Text drumrum → direktes .output
-            first = next(iter(attachments.values()))
-            return _resolve_attachment(first, uuid_to_varname)
-        # Gemischt → als String mit Kommentar
-        comment = " # Mischung aus Text und Variablen – ggf. manuell anpassen"
-        return repr(string_val) + comment
+            # Nur ein Token ohne umgebenden Text → direkte Referenz
+            return _resolve_attachment(next(iter(attachments.values())), uuid_to_varname)
+        # Gemischter Inhalt: Tokens lassen sich nicht 1:1 abbilden
+        return repr(string_val)
     return repr(str(value))
+
+
+def _dictionary_literal(wfitems: Any, uuid_to_varname: dict[str, str]) -> str | None:
+    """Baut aus einer WFItems-Struktur ein Python-Dict-Literal."""
+    value = wfitems.get("Value", wfitems) if isinstance(wfitems, dict) else wfitems
+    if isinstance(value, dict):
+        items = value.get("WFDictionaryFieldValueItems", [])
+    elif isinstance(value, list):
+        items = value
+    else:
+        return None
+    pairs = []
+    for item in items:
+        if not isinstance(item, dict):
+            return None
+        key = resolve_value(item.get("WFKey", ""), uuid_to_varname)
+        val = resolve_value(item.get("WFValue", ""), uuid_to_varname)
+        pairs.append(f"{key}: {val}")
+    return "{" + ", ".join(pairs) + "}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -331,7 +280,6 @@ class Decompiler:
         count = self.action_counter.get(base, 0)
         self.action_counter[base] = count + 1
         name = base if count == 0 else f"{base}_{count}"
-        # Sicherstellen, dass der Name einzigartig ist
         while name in self.used_names:
             count += 1
             self.action_counter[base] = count
@@ -339,171 +287,132 @@ class Decompiler:
         self.used_names.add(name)
         return name
 
-    def _register_output(self, uuid: str, suggested_name: str) -> str:
-        name = self._fresh_name(suggested_name)
-        self.uuid_to_varname[uuid] = name
-        return name
-
     def decompile(self, plist_data: bytes) -> str:
         data = plistlib.loads(plist_data)
 
         shortcut_name = data.get("WFWorkflowName", "MeinKurzbefehl")
-        actions = data.get("WFWorkflowActions", [])
+        workflow_actions = data.get("WFWorkflowActions", [])
 
         if self.show_json:
             print("─── Rohe Plist-Struktur (JSON) ───")
             print(json.dumps(_plist_to_json(data), indent=2, ensure_ascii=False))
             print("──────────────────────────────────\n")
 
-        # Erste Pass: alle Output-UUIDs registrieren
-        self._prescan(actions)
+        # Erster Pass: Output-UUIDs registrieren, damit Referenzen funktionieren
+        self._prescan(workflow_actions)
 
-        # Zweite Pass: Code generieren
-        action_vars = self._process_actions(actions, indent=0)
+        # Zweiter Pass: Code generieren
+        top_level_vars = self._process_actions(workflow_actions)
 
-        # Imports zusammenstellen
-        base_imports = sorted(self.imports_needed - {"__IF__", "__MENU__", "__REPEAT_COUNT__", "__REPEAT_EACH__", "__NOTHING__"})
-        control_flow_used = self.imports_needed & {"If", "Menu", "RepeatCount", "RepeatEach"}
-        type_imports: list[str] = []
-        for cls in ["Variable", "CurrentDate"]:
-            if any(cls in line for line in self.lines):
-                type_imports.append(cls)
+        # Imports zusammenstellen (Variable/CurrentDate nur, wenn sie als
+        # Aufruf im generierten Code vorkommen)
+        type_imports = {
+            cls for cls in ("Variable", "CurrentDate")
+            if any(re.search(rf"(?<![A-Za-z0-9_]){cls}\(", line) for line in self.lines)
+        }
+        all_imports = sorted(self.imports_needed | type_imports)
 
         import_lines = []
-        if base_imports or control_flow_used:
-            all_imports = sorted(set(base_imports) | control_flow_used | set(type_imports) | {"Shortcut", "install_shortcut"})
+        if all_imports:
             import_lines.append("from shortcutspy import (")
             for name in all_imports:
                 import_lines.append(f"    {name},")
             import_lines.append(")")
+        else:
+            import_lines.append("from shortcutspy import Shortcut, install_shortcut")
 
-        # Shortcut zusammensetzen
         safe_name = shortcut_name.replace('"', '\\"')
-        shortcut_var = "shortcut"
-        top_level_var_names = [v for v in action_vars if v]
-
         output_lines = []
         output_lines.extend(import_lines)
         output_lines.append("")
         output_lines.append("")
-        output_lines.append(f'{shortcut_var} = Shortcut("{safe_name}")')
+        output_lines.append(f'shortcut = Shortcut("{safe_name}")')
         output_lines.append("")
         output_lines.extend(self.lines)
         output_lines.append("")
-        if top_level_var_names:
-            add_args = ", ".join(top_level_var_names)
-            output_lines.append(f"{shortcut_var}.add({add_args})")
-        output_lines.append(f'install_shortcut({shortcut_var}, "{_slugify(shortcut_name)}.shortcut")')
+        if top_level_vars:
+            output_lines.append(f"shortcut.add({', '.join(top_level_vars)})")
+        output_lines.append(f'install_shortcut(shortcut, "{_slugify(shortcut_name)}.shortcut")')
         output_lines.append("")
 
         return "\n".join(output_lines)
 
-    def _prescan(self, actions: list[dict]) -> None:
-        """Registriert alle Action-UUIDs vorab, damit Forward-Referenzen funktionieren."""
-        for action in actions:
+    def _prescan(self, workflow_actions: list[dict]) -> None:
+        """Registriert die Output-UUIDs aller normalen Actions vorab."""
+        for action in workflow_actions:
+            identifier = action.get("WFWorkflowActionIdentifier", "")
+            if identifier in CONTROL_FLOW:
+                continue
             params = action.get("WFWorkflowActionParameters", {})
-            uuid = params.get("UUID") or params.get("CustomOutputName") or _generate_uuid_key(params)
-            if uuid:
-                identifier = action.get("WFWorkflowActionIdentifier", "")
-                cls_info = ACTION_MAP.get(identifier)
-                base = cls_info[0].lower().replace("__", "") if cls_info else "action"
-                base = re.sub(r"[^a-z0-9_]", "", base) or "action"
-                self.uuid_to_varname[uuid] = self._fresh_name(base)
+            uuid = params.get("UUID")
+            if not uuid:
+                continue
+            cls_info = ACTION_MAP.get(identifier)
+            base = cls_info[0].lower() if cls_info else "raw_action"
+            base = re.sub(r"[^a-z0-9_]", "", base) or "action"
+            self.uuid_to_varname[uuid] = self._fresh_name(base)
 
-    def _process_actions(self, actions: list[dict], indent: int) -> list[str]:
-        """Verarbeitet eine Liste von Actions und gibt Variablennamen zurück."""
+    def _process_actions(self, workflow_actions: list[dict]) -> list[str]:
+        """Verarbeitet eine Action-Liste und gibt die erzeugten Variablennamen zurück."""
         i = 0
-        top_vars: list[str] = []
+        var_names: list[str] = []
 
-        while i < len(actions):
-            action = actions[i]
+        while i < len(workflow_actions):
+            action = workflow_actions[i]
             identifier = action.get("WFWorkflowActionIdentifier", "unknown")
             params = action.get("WFWorkflowActionParameters", {})
+
+            if identifier in CONTROL_FLOW:
+                control_mode = params.get("WFControlFlowMode", 0)
+                if control_mode != 0:
+                    # Else-/End-Marker ohne zugehörigen Anfang: überspringen
+                    i += 1
+                    continue
+                if identifier == IF_IDENTIFIER:
+                    then_actions, otherwise_actions, end_idx = self._collect_if_block(workflow_actions, i)
+                    end_params = self._params_at(workflow_actions, end_idx)
+                    var_names.append(self._emit_if_block(params, then_actions, otherwise_actions, end_params))
+                elif identifier == MENU_IDENTIFIER:
+                    options, end_idx = self._collect_menu_block(workflow_actions, i)
+                    end_params = self._params_at(workflow_actions, end_idx)
+                    var_names.append(self._emit_menu_block(params, options, end_params))
+                elif identifier == REPEAT_COUNT_IDENTIFIER:
+                    body_actions, end_idx = self._collect_simple_block(workflow_actions, i)
+                    end_params = self._params_at(workflow_actions, end_idx)
+                    var_names.append(self._emit_repeat_count(params, body_actions, end_params))
+                else:  # REPEAT_EACH_IDENTIFIER
+                    body_actions, end_idx = self._collect_simple_block(workflow_actions, i)
+                    end_params = self._params_at(workflow_actions, end_idx)
+                    var_names.append(self._emit_repeat_each(params, body_actions, end_params))
+                i = end_idx + 1
+                continue
+
             cls_info = ACTION_MAP.get(identifier)
-
             if cls_info is None:
-                # Unbekannte Action → RawAction
-                var_name = self._emit_raw_action(identifier, params, indent)
-                if indent == 0:
-                    top_vars.append(var_name)
-                i += 1
-                continue
-
-            cls_name, param_map = cls_info
-
-            # ── Kontrollfluss ──────────────────────────────────────────────
-
-            if cls_name == "__NOTHING__":
-                i += 1
-                continue
-
-            if cls_name == "__IF__":
-                control_mode = params.get("WFControlFlowMode", 0)
-
-                if control_mode == 0:  # Öffnender If-Block
-                    then_actions, otherwise_actions, end_idx = self._collect_if_block(actions, i)
-                    var_name = self._emit_if_block(params, then_actions, otherwise_actions, indent)
-                    if indent == 0:
-                        top_vars.append(var_name)
-                    i = end_idx + 1
-                else:
-                    i += 1  # Else/End überspringen (wird oben gesammelt)
-                continue
-
-            if cls_name == "__MENU__":
-                control_mode = params.get("WFControlFlowMode", 0)
-                if control_mode == 0:
-                    options, end_idx = self._collect_menu_block(actions, i)
-                    var_name = self._emit_menu_block(params, options, indent)
-                    if indent == 0:
-                        top_vars.append(var_name)
-                    i = end_idx + 1
-                else:
-                    i += 1
-                continue
-
-            if cls_name == "__REPEAT_COUNT__":
-                control_mode = params.get("WFControlFlowMode", 0)
-                if control_mode == 0:
-                    body_actions, end_idx = self._collect_simple_block(actions, i)
-                    var_name = self._emit_repeat_count(params, body_actions, indent)
-                    if indent == 0:
-                        top_vars.append(var_name)
-                    i = end_idx + 1
-                else:
-                    i += 1
-                continue
-
-            if cls_name == "__REPEAT_EACH__":
-                control_mode = params.get("WFControlFlowMode", 0)
-                if control_mode == 0:
-                    body_actions, end_idx = self._collect_simple_block(actions, i)
-                    var_name = self._emit_repeat_each(params, body_actions, indent)
-                    if indent == 0:
-                        top_vars.append(var_name)
-                    i = end_idx + 1
-                else:
-                    i += 1
-                continue
-
-            # ── Normale Action ─────────────────────────────────────────────
-            var_name = self._emit_action(cls_name, param_map, params, indent)
-            if indent == 0:
-                top_vars.append(var_name)
+                var_names.append(self._emit_raw_action(identifier, params))
+            else:
+                var_names.append(self._emit_action(cls_info[0], cls_info[1], params))
             i += 1
 
-        return top_vars
+        return var_names
 
-    # ── Sammler-Hilfsmethoden ────────────────────────────────────────────────
+    @staticmethod
+    def _params_at(workflow_actions: list[dict], idx: int) -> dict:
+        if 0 <= idx < len(workflow_actions):
+            return workflow_actions[idx].get("WFWorkflowActionParameters", {})
+        return {}
 
-    def _collect_if_block(self, actions, start_idx):
-        """Sammelt Then/Otherwise/End eines If-Blocks."""
-        group_id = actions[start_idx].get("WFWorkflowActionParameters", {}).get("GroupingIdentifier")
-        then_actions, otherwise_actions = [], []
+    # ── Sammler ──────────────────────────────────────────────────────────────
+
+    def _collect_if_block(self, workflow_actions: list[dict], start_idx: int):
+        """Sammelt Then-/Otherwise-Actions eines If-Blocks bis zum End-Marker."""
+        group_id = self._params_at(workflow_actions, start_idx).get("GroupingIdentifier")
+        then_actions: list[dict] = []
+        otherwise_actions: list[dict] = []
         current = then_actions
         i = start_idx + 1
-        while i < len(actions):
-            a = actions[i]
+        while i < len(workflow_actions):
+            a = workflow_actions[i]
             p = a.get("WFWorkflowActionParameters", {})
             if p.get("GroupingIdentifier") == group_id:
                 mode = p.get("WFControlFlowMode", 0)
@@ -517,13 +426,13 @@ class Decompiler:
             i += 1
         return then_actions, otherwise_actions, i - 1
 
-    def _collect_simple_block(self, actions, start_idx):
-        """Sammelt Body eines Repeat-Blocks."""
-        group_id = actions[start_idx].get("WFWorkflowActionParameters", {}).get("GroupingIdentifier")
-        body = []
+    def _collect_simple_block(self, workflow_actions: list[dict], start_idx: int):
+        """Sammelt den Body eines Repeat-Blocks bis zum End-Marker."""
+        group_id = self._params_at(workflow_actions, start_idx).get("GroupingIdentifier")
+        body: list[dict] = []
         i = start_idx + 1
-        while i < len(actions):
-            a = actions[i]
+        while i < len(workflow_actions):
+            a = workflow_actions[i]
             p = a.get("WFWorkflowActionParameters", {})
             if p.get("GroupingIdentifier") == group_id and p.get("WFControlFlowMode", 0) == 2:
                 return body, i
@@ -531,177 +440,207 @@ class Decompiler:
             i += 1
         return body, i - 1
 
-    def _collect_menu_block(self, actions, start_idx):
-        """Sammelt alle Optionen eines Menüs."""
-        group_id = actions[start_idx].get("WFWorkflowActionParameters", {}).get("GroupingIdentifier")
-        options: list[tuple[str, list]] = []
-        current_title = ""
-        current_actions: list = []
+    def _collect_menu_block(self, workflow_actions: list[dict], start_idx: int):
+        """Sammelt alle Optionen (Titel + Actions) eines Menü-Blocks."""
+        group_id = self._params_at(workflow_actions, start_idx).get("GroupingIdentifier")
+        options: list[tuple[Any, list[dict]]] = []
+        current_title: Any = ""
+        current_actions: list[dict] = []
+        seen_item = False
         i = start_idx + 1
-        while i < len(actions):
-            a = actions[i]
+        while i < len(workflow_actions):
+            a = workflow_actions[i]
             p = a.get("WFWorkflowActionParameters", {})
             if p.get("GroupingIdentifier") == group_id:
                 mode = p.get("WFControlFlowMode", 0)
-                if mode == 1:  # MenuItem
-                    if current_title or current_actions:
+                if mode == 1:  # Nächster Menüpunkt
+                    if seen_item:
                         options.append((current_title, current_actions))
-                    current_title = resolve_value(p.get("WFMenuItemTitle", ""), self.uuid_to_varname)
+                    current_title = p.get("WFMenuItemTitle", "")
                     current_actions = []
+                    seen_item = True
                     i += 1
                     continue
                 if mode == 2:  # End
-                    if current_title or current_actions:
+                    if seen_item:
                         options.append((current_title, current_actions))
                     return options, i
             current_actions.append(a)
             i += 1
-        if current_title or current_actions:
+        if seen_item:
             options.append((current_title, current_actions))
         return options, i - 1
 
-    # ── Emitter ─────────────────────────────────────────────────────────────
+    # ── Emitter ──────────────────────────────────────────────────────────────
+    #
+    # Wichtig: Kind-Actions werden ZUERST als eigene Zuweisungen ausgegeben,
+    # danach wird der Block konstruiert, der ihre Variablennamen referenziert.
+    # So entsteht immer syntaktisch gültiger Python-Code.
 
-    def _emit_action(self, cls_name: str, param_map: dict, params: dict, indent: int) -> str:
-        prefix = "    " * indent
+    def _emit_action(self, cls_name: str, param_map: dict[str, str], params: dict) -> str:
         self.imports_needed.add(cls_name)
-        uuid = params.get("UUID") or params.get("CustomOutputName")
+        uuid = params.get("UUID")
 
-        # Variablenname bestimmen
-        base = re.sub(r"[^a-z0-9_]", "", cls_name.lower()) or "action"
         if uuid and uuid in self.uuid_to_varname:
             var_name = self.uuid_to_varname[uuid]
         else:
+            base = re.sub(r"[^a-z0-9_]", "", cls_name.lower()) or "action"
             var_name = self._fresh_name(base)
             if uuid:
                 self.uuid_to_varname[uuid] = var_name
 
-        # Parameter auflösen
         kwargs: list[str] = []
+        used_keys: set[str] = set()
+
+        # Sonderfälle mit eigener, lesbarerer Darstellung
+        if cls_name == "Dictionary" and "WFItems" in params:
+            literal = _dictionary_literal(params["WFItems"], self.uuid_to_varname)
+            if literal is not None:
+                kwargs.append(f"items={literal}")
+                used_keys.add("WFItems")
+        elif cls_name == "GetVariable" and "WFVariable" in params:
+            wfvar = params["WFVariable"]
+            inner = wfvar.get("Value", wfvar) if isinstance(wfvar, dict) else {}
+            name_val = inner.get("VariableName") if isinstance(inner, dict) else None
+            if name_val:
+                kwargs.append(f"name={name_val!r}")
+                used_keys.add("WFVariable")
+
         for plist_key, py_kwarg in param_map.items():
-            if plist_key in params:
+            if plist_key in params and plist_key not in used_keys:
                 val_str = resolve_value(params[plist_key], self.uuid_to_varname)
                 kwargs.append(f"{py_kwarg}={val_str}")
+                used_keys.add(plist_key)
 
-        # Noch verbleibende ungemappte Parameter als Kommentar
-        mapped_keys = set(param_map.keys()) | {"UUID", "CustomOutputName", "GroupingIdentifier", "WFControlFlowMode"}
-        unmapped = {k: v for k, v in params.items() if k not in mapped_keys}
+        # Ungemappte Parameter als Kommentar dokumentieren
+        mapped = used_keys | set(param_map) | _META_PARAM_KEYS
+        unmapped = {k: v for k, v in params.items() if k not in mapped}
         comment = ""
-        if unmapped and len(unmapped) <= 3:
-            kv_strs = [f"{k}={repr(v)}" for k, v in list(unmapped.items())[:3]]
-            comment = "  # " + ", ".join(kv_strs)
+        if unmapped:
+            kv_strs = [f"{k}={_short_repr(v)}" for k, v in list(unmapped.items())[:3]]
+            comment = "  # nicht übernommen: " + ", ".join(kv_strs)
 
-        args_str = ", ".join(kwargs)
-        line = f"{prefix}{var_name} = {cls_name}({args_str}){comment}"
-        self.lines.append(line)
+        self.lines.append(f"{var_name} = {cls_name}({', '.join(kwargs)}){comment}")
         return var_name
 
-    def _emit_raw_action(self, identifier: str, params: dict, indent: int) -> str:
-        prefix = "    " * indent
+    def _emit_raw_action(self, identifier: str, params: dict) -> str:
         self.imports_needed.add("RawAction")
-        var_name = self._fresh_name("raw_action")
-        safe_params = {k: v for k, v in params.items() if k not in ("UUID", "GroupingIdentifier", "WFControlFlowMode")}
-        # Params kürzen für Lesbarkeit
-        params_repr = repr(safe_params) if safe_params else ""
-        if params_repr and len(params_repr) > 80:
-            params_repr = params_repr[:77] + "..."
-        line = f'{prefix}{var_name} = RawAction("{identifier}", {params_repr})'
-        self.lines.append(f'{prefix}# Unbekannte Action: {identifier}')
-        self.lines.append(line)
+        uuid = params.get("UUID")
+        if uuid and uuid in self.uuid_to_varname:
+            var_name = self.uuid_to_varname[uuid]
+        else:
+            var_name = self._fresh_name("raw_action")
+            if uuid:
+                self.uuid_to_varname[uuid] = var_name
+
+        kwargs: list[str] = []
+        skipped: dict[str, Any] = {}
+        for key, val in params.items():
+            if key in _META_PARAM_KEYS:
+                continue
+            if key.isidentifier() and isinstance(val, (str, int, float, bool)):
+                kwargs.append(f"{key}={val!r}")
+            else:
+                skipped[key] = val
+
+        self.lines.append(f"# Unbekannte Action: {identifier}")
+        if skipped:
+            self.lines.append(f"# Nicht übernommene Parameter: {_short_repr(skipped)}")
+        args = ", ".join([repr(identifier)] + kwargs)
+        self.lines.append(f"{var_name} = RawAction({args})")
         return var_name
 
-    def _emit_if_block(self, params: dict, then_actions: list, otherwise_actions: list, indent: int) -> str:
-        prefix = "    " * indent
-        self.imports_needed.add("If")
-        var_name = self._fresh_name("check")
-
-        # Input-Referenz
-        input_val = params.get("WFInput", {})
-        input_str = resolve_value(input_val, self.uuid_to_varname)
+    def _emit_if_block(self, params: dict, then_actions: list, otherwise_actions: list,
+                       end_params: dict) -> str:
+        input_str = resolve_value(params.get("WFInput"), self.uuid_to_varname)
         condition = params.get("WFCondition", 100)
-
-        # Vergleichswert (WFConditionalActionString, z.B. "kalender_neu" bei "Enthält")
-        value_arg = ""
+        value_part = ""
         if "WFConditionalActionString" in params:
             value_str = resolve_value(params["WFConditionalActionString"], self.uuid_to_varname)
-            value_arg = f", value={value_str}"
-        elif "WFNumberValue" in params:
-            value_str = resolve_value(params["WFNumberValue"], self.uuid_to_varname)
-            value_arg = f", value={value_str}"
+            value_part = f", value={value_str}"
 
-        self.lines.append(f"{prefix}{var_name} = If({input_str}, condition={condition}{value_arg}).then(")
+        then_vars = self._process_actions(then_actions)
+        else_vars = self._process_actions(otherwise_actions)
 
-        # Then-Block
-        then_vars = self._process_actions(then_actions, indent + 1)
+        self.imports_needed.add("If")
+        var_name = self._fresh_name("check")
+        self.lines.append(f"{var_name} = If({input_str}, condition={condition!r}{value_part}).then(")
         for v in then_vars:
-            self.lines.append(f"{'    ' * (indent + 1)}{v},")
-
-        if otherwise_actions:
-            self.lines.append(f"{prefix}).otherwise(")
-            else_vars = self._process_actions(otherwise_actions, indent + 1)
+            self.lines.append(f"    {v},")
+        if else_vars:
+            self.lines.append(").otherwise(")
             for v in else_vars:
-                self.lines.append(f"{'    ' * (indent + 1)}{v},")
+                self.lines.append(f"    {v},")
+        self.lines.append(")")
 
-        self.lines.append(f"{prefix})")
+        self._register_block_output(end_params, var_name)
         return var_name
 
-    def _emit_menu_block(self, params: dict, options: list[tuple[str, list]], indent: int) -> str:
-        prefix = "    " * indent
+    def _emit_menu_block(self, params: dict, options: list[tuple[Any, list]],
+                         end_params: dict) -> str:
+        resolved_options = [
+            (resolve_value(title, self.uuid_to_varname), self._process_actions(option_actions))
+            for title, option_actions in options
+        ]
+
         self.imports_needed.add("Menu")
         var_name = self._fresh_name("menu")
-
-        prompt = resolve_value(params.get("WFMenuPrompt", "Wähle eine Option"), self.uuid_to_varname)
-        self.lines.append(f"{prefix}{var_name} = Menu(prompt={prompt})")
-
-        for title_str, option_actions in options:
-            self.lines.append(f"{prefix}{var_name} = {var_name}.option(")
-            self.lines.append(f"{prefix}    {title_str},")
-            option_vars = self._process_actions(option_actions, indent + 1)
+        prompt = resolve_value(params.get("WFMenuPrompt", ""), self.uuid_to_varname)
+        self.lines.append(f"{var_name} = Menu(prompt={prompt})")
+        for title_str, option_vars in resolved_options:
+            self.lines.append(f"{var_name}.option(")
+            self.lines.append(f"    {title_str},")
             for v in option_vars:
-                self.lines.append(f"{'    ' * (indent + 1)}{v},")
-            self.lines.append(f"{prefix})")
+                self.lines.append(f"    {v},")
+            self.lines.append(")")
 
+        self._register_block_output(end_params, var_name)
         return var_name
 
-    def _emit_repeat_count(self, params: dict, body_actions: list, indent: int) -> str:
-        prefix = "    " * indent
+    def _emit_repeat_count(self, params: dict, body_actions: list, end_params: dict) -> str:
+        count = resolve_value(params.get("WFRepeatCount", 1), self.uuid_to_varname)
+        body_vars = self._process_actions(body_actions)
+
         self.imports_needed.add("RepeatCount")
         var_name = self._fresh_name("loop")
-
-        count = resolve_value(params.get("WFRepeatCount", 1), self.uuid_to_varname)
-        self.lines.append(f"{prefix}{var_name} = RepeatCount({count}).body(")
-        body_vars = self._process_actions(body_actions, indent + 1)
+        self.lines.append(f"{var_name} = RepeatCount({count}).body(")
         for v in body_vars:
-            self.lines.append(f"{'    ' * (indent + 1)}{v},")
-        self.lines.append(f"{prefix})")
+            self.lines.append(f"    {v},")
+        self.lines.append(")")
+
+        self._register_block_output(end_params, var_name)
         return var_name
 
-    def _emit_repeat_each(self, params: dict, body_actions: list, indent: int) -> str:
-        prefix = "    " * indent
+    def _emit_repeat_each(self, params: dict, body_actions: list, end_params: dict) -> str:
+        input_str = resolve_value(params.get("WFInput"), self.uuid_to_varname)
+        body_vars = self._process_actions(body_actions)
+
         self.imports_needed.add("RepeatEach")
         var_name = self._fresh_name("loop")
-
-        input_val = resolve_value(params.get("WFInput", {}), self.uuid_to_varname)
-        self.lines.append(f"{prefix}{var_name} = RepeatEach({input_val}).body(")
-        body_vars = self._process_actions(body_actions, indent + 1)
+        self.lines.append(f"{var_name} = RepeatEach({input_str}).body(")
         for v in body_vars:
-            self.lines.append(f"{'    ' * (indent + 1)}{v},")
-        self.lines.append(f"{prefix})")
+            self.lines.append(f"    {v},")
+        self.lines.append(")")
+
+        self._register_block_output(end_params, var_name)
         return var_name
+
+    def _register_block_output(self, end_params: dict, var_name: str) -> None:
+        """End-Marker-UUID auf den Block mappen, damit `.output`-Referenzen greifen."""
+        end_uuid = end_params.get("UUID")
+        if end_uuid:
+            self.uuid_to_varname[end_uuid] = var_name
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Hilfsroutinen
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _generate_uuid_key(params: dict) -> str | None:
-    """Versucht einen stabilen Schlüssel aus den Parametern zu bauen."""
-    for key in ("WFVariableName", "WFShortcutName", "WFURLActionURL"):
-        if key in params:
-            val = params[key]
-            if isinstance(val, str):
-                return val[:30]
-    return None
+def _short_repr(value: Any, limit: int = 120) -> str:
+    text = repr(_plist_to_json(value))
+    if len(text) > limit:
+        text = text[: limit - 3] + "..."
+    return text
 
 
 def _slugify(name: str) -> str:
@@ -714,8 +653,7 @@ def _plist_to_json(obj: Any) -> Any:
     """Konvertiert Plist-Objekte rekursiv in JSON-serialisierbare Typen."""
     if isinstance(obj, bytes):
         try:
-            inner = plistlib.loads(obj)
-            return _plist_to_json(inner)
+            return _plist_to_json(plistlib.loads(obj))
         except Exception:
             return obj.hex()
     if isinstance(obj, dict):
@@ -731,15 +669,14 @@ def _plist_to_json(obj: Any) -> Any:
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="ShortcutsPy Decompiler – .shortcut → Python",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Beispiele:
-  python decompile.py mein.shortcut
-  python decompile.py mein.shortcut -o ausgabe.py
-  python decompile.py mein.shortcut --json
-  python decompile.py mein.shortcut -o ausgabe.py --json
+  python -m shortcutspy.decompile mein.shortcut
+  python -m shortcutspy.decompile mein.shortcut -o ausgabe.py
+  python -m shortcutspy.decompile mein.shortcut --json
 """,
     )
     parser.add_argument("shortcut_file", help="Pfad zur .shortcut-Datei")
@@ -752,11 +689,9 @@ def main():
         print(f"Fehler: Datei nicht gefunden: {path}", file=sys.stderr)
         sys.exit(1)
 
-    plist_data = path.read_bytes()
-
     decompiler = Decompiler(show_json=args.json)
     try:
-        python_code = decompiler.decompile(plist_data)
+        python_code = decompiler.decompile(path.read_bytes())
     except Exception as e:
         print(f"Fehler beim Decompilieren: {e}", file=sys.stderr)
         import traceback

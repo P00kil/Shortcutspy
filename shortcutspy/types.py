@@ -96,8 +96,8 @@ class Variable:
     def as_variable(self) -> dict:
         """Einfaches Variable-Dict (f\u00fcr WFVariable in GetVariable u.\u00e4.)."""
         return {
-            "Type": "Variable",
-            "VariableName": self.name,
+            "Value": {"Type": "Variable", "VariableName": self.name},
+            "WFSerializationType": "WFTextTokenAttachment",
         }
 
     def as_text_token(self) -> dict:

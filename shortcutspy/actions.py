@@ -106,9 +106,6 @@ class GetVariable(Action):
     output_name = "Variable"
 
     def __init__(self, name: str):
-        # iOS erwartet das WFTextTokenAttachment-Format mit Serialization-Wrapper;
-        # die nackte Form {"Type":"Variable","VariableName":...} wird vom UI
-        # nicht aufgelöst (Variable-Feld bleibt leer).
         super().__init__(
             WFVariable={
                 "Value": {"Type": "Variable", "VariableName": name},
@@ -208,6 +205,31 @@ class MatchText(Action):
         super().__init__(**params)
 
 
+class GetMatchGroup(Action):
+    identifier = "is.workflow.actions.text.match.getgroup"
+    output_name = "Übereinstimmungsgruppe"
+
+    def __init__(self, matches: Any = None, group_index: int = 1, group_type: str = "Group At Index"):
+        params: dict[str, Any] = {
+            "WFGetGroupType": group_type,
+            "WFGroupIndex": group_index,
+        }
+        if matches is not None:
+            params["matches"] = _resolve(matches)
+        super().__init__(**params)
+
+
+class CountItems(Action):
+    identifier = "is.workflow.actions.count"
+    output_name = "Anzahl"
+
+    def __init__(self, input: Any = None, count_type: str = "Items"):
+        params: dict[str, Any] = {"WFCountType": count_type}
+        if input is not None:
+            params["Input"] = _resolve(input)
+        super().__init__(**params)
+
+
 class ChangeCase(Action):
     identifier = "is.workflow.actions.text.changecase"
     output_name = "Aktualisierter Text"
@@ -233,6 +255,61 @@ class TrimWhitespace(Action):
 class DetectText(Action):
     identifier = "is.workflow.actions.detect.text"
     output_name = "Text"
+
+    def __init__(self, input: Any = None):
+        params: dict[str, Any] = {}
+        if input is not None:
+            params["WFInput"] = _resolve(input)
+        super().__init__(**params)
+
+
+class DetectPhoneNumber(Action):
+    identifier = "is.workflow.actions.detect.phonenumber"
+    output_name = "Telefonnummern"
+
+    def __init__(self, input: Any = None):
+        params: dict[str, Any] = {}
+        if input is not None:
+            params["WFInput"] = _resolve(input)
+        super().__init__(**params)
+
+
+class DetectEmailAddress(Action):
+    identifier = "is.workflow.actions.detect.emailaddress"
+    output_name = "E-Mail-Adressen"
+
+    def __init__(self, input: Any = None):
+        params: dict[str, Any] = {}
+        if input is not None:
+            params["WFInput"] = _resolve(input)
+        super().__init__(**params)
+
+
+class DetectAddress(Action):
+    identifier = "is.workflow.actions.detect.address"
+    output_name = "Adressen"
+
+    def __init__(self, input: Any = None):
+        params: dict[str, Any] = {}
+        if input is not None:
+            params["WFInput"] = _resolve(input)
+        super().__init__(**params)
+
+
+class DetectDictionary(Action):
+    identifier = "is.workflow.actions.detect.dictionary"
+    output_name = "Wörterbuch"
+
+    def __init__(self, input: Any = None):
+        params: dict[str, Any] = {}
+        if input is not None:
+            params["WFInput"] = _resolve(input)
+        super().__init__(**params)
+
+
+class GetImagesFromInput(Action):
+    identifier = "is.workflow.actions.detect.images"
+    output_name = "Bilder"
 
     def __init__(self, input: Any = None):
         params: dict[str, Any] = {}
@@ -419,19 +496,11 @@ class GetItemFromList(Action):
     identifier = "is.workflow.actions.getitemfromlist"
     output_name = "Objekt aus Liste"
 
-    def __init__(self, input: Any = None, index: int | None = None, specifier: str = "Erstes Objekt"):
-        """
-        index: 1-basierter Index für ein bestimmtes Listenelement.
-               Wenn gesetzt, wird specifier automatisch auf "Index aus Element" gestellt.
-        specifier: "Erstes Objekt" | "Letztes Objekt" | "Zufälliges Objekt" |
-                   "Index aus Element" | "Bereich von Elementen"
-        """
-        params: dict[str, Any] = {}
-        if index is not None:
-            params["WFItemSpecifier"] = "Index aus Element"
-            params["WFItemIndex"] = index
-        else:
-            params["WFItemSpecifier"] = specifier
+    def __init__(self, input: Any = None, index: Any = 1, specifier: str = "Item At Index"):
+        params: dict[str, Any] = {
+            "WFItemSpecifier": specifier,
+            "WFItemIndex": _resolve(index),
+        }
         if input is not None:
             params["WFInput"] = _resolve(input)
         super().__init__(**params)
@@ -1051,6 +1120,38 @@ class SetBluetooth(Action):
         super().__init__(OnValue=on)
 
 
+class SetAirplaneMode(Action):
+    identifier = "is.workflow.actions.airplanemode.set"
+
+    def __init__(self, on: bool = True):
+        super().__init__(OnValue=on)
+
+
+class SetLowPowerMode(Action):
+    identifier = "is.workflow.actions.lowpowermode.set"
+
+    def __init__(self, on: bool = True):
+        super().__init__(OnValue=on)
+
+
+class SetFlashlight(Action):
+    identifier = "is.workflow.actions.flashlight"
+
+    def __init__(self, setting: str = "On"):
+        super().__init__(WFFlashlightSetting=setting)
+
+
+class Vibrate(Action):
+    identifier = "is.workflow.actions.vibrate"
+
+
+class StartTimer(Action):
+    identifier = "is.workflow.actions.timer.start"
+
+    def __init__(self, value: float = 5, unit: str = "min"):
+        super().__init__(WFDuration={"Value": {"Unit": unit, "Magnitude": value}})
+
+
 class SetAppearance(Action):
     identifier = "is.workflow.actions.appearance"
 
@@ -1294,6 +1395,11 @@ class GenerateBarcode(Action):
         if text is not None:
             params["WFText"] = _resolve_text(text)
         super().__init__(**params)
+
+
+class ScanQRCode(Action):
+    identifier = "is.workflow.actions.scanbarcode"
+    output_name = "QR/Barcode"
 
 
 class RunSSHScript(Action):

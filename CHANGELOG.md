@@ -11,11 +11,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - GitHub Actions CI workflow
-- Test suite with pytest
+- Test suite with pytest, including decompiler round-trip and
+  consistency tests (`tests/test_decompile.py`)
 - `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`
 - `CHANGELOG.md`
 - `.editorconfig` and `pre-commit` configuration
-- Removed `Makefile` (use pyproject.toml scripts instead)
+- 13 new actions: `CountItems`, `GetMatchGroup`, `DetectPhoneNumber`,
+  `DetectEmailAddress`, `DetectAddress`, `DetectDictionary`,
+  `GetImagesFromInput`, `SetAirplaneMode`, `SetLowPowerMode`,
+  `SetFlashlight`, `Vibrate`, `StartTimer`, `ScanQRCode`
+- `shortcutspy-decompile` console script (`pip install .` makes it available)
+
+### Changed
+- Decompiler: the identifier-to-class mapping (`ACTION_MAP`) is now derived
+  automatically from `actions.py` via introspection. Previously the
+  hand-written table referenced 49 non-existent classes, 17 wrong
+  identifiers, and 63 invalid keyword arguments.
+- `GetItemFromList` now sets `WFItemSpecifier` (without it, the index was
+  silently ignored by the Shortcuts app) and resolves action outputs
+  passed as `index`
+
+### Fixed
+- Decompiler: control flow blocks (`If`, `Menu`, `Repeat…`) generated
+  syntactically invalid Python (assignments inside call parentheses)
+- Decompiler: generated import block was missing a trailing comma
+  (SyntaxError in every generated file)
+- Decompiler: `RawAction` received its parameter dict as the positional
+  `output_name` argument; parameters are now passed as keyword arguments
+- `Variable.as_variable()` and `GetVariable` now emit the correct
+  `WFTextTokenAttachment` serialization (named variables were previously
+  not resolved by the Shortcuts app)
+- `Dictionary` now wraps its items in the required
+  `WFDictionaryFieldValue` structure
+- Example `produktivitaets_hub.py`: the random quote option always showed
+  the first quote because the random number was never used
+
+### Removed
+- `Makefile` (use pyproject.toml scripts instead)
+- Brittle UI-scripting automation (`create_shortcut_stub.applescript`,
+  `run_create_shortcut.sh`)
 
 ---
 

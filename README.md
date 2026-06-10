@@ -350,9 +350,9 @@ sign_shortcut("my.shortcut", "my_signed.shortcut")
 | `Variable(name)` | Named variable for storing and retrieving values |
 | `CurrentDate()` | Returns the current date and time as a token |
 
-### Actions (150+)
+### Actions (160+)
 
-The framework maps over 150 Apple Shortcuts actions as Python classes.
+The framework maps over 160 Apple Shortcuts actions as Python classes.
 Here is an overview of the main categories:
 
 | Category | Examples |
@@ -411,21 +411,22 @@ ShortcutsPy/
 ├── tests/
 │   ├── test_shortcut.py     # Tests for the Shortcut builder and export
 │   ├── test_actions.py      # Tests for all action classes
-│   └── test_flow.py         # Tests for control flow blocks
+│   ├── test_flow.py         # Tests for control flow blocks
+│   └── test_decompile.py    # Decompiler round-trip and consistency tests
 ├── examples/
 │   ├── demo.py              # Simple hello world example
 │   ├── clipboard_helfer.py  # Menu with clipboard tools
 │   ├── produktivitaets_hub.py  # 5-option hub with auto-install
 │   └── setup_assistent.py   # Setup assistant
 ├── automation/
-│   └── build_and_install.sh # Shell: Python script → Sign → Open
+│   ├── build_and_install.sh     # Shell: Python script → Sign → Open
+│   └── generate_actions_doc.py  # Regenerates wiki/Actions.md
 ├── wiki/                    # Wiki pages (also on GitHub Wiki)
 ├── .github/
 │   ├── workflows/ci.yml     # GitHub Actions CI (Lint, Test, Build)
 │   ├── ISSUE_TEMPLATE/      # Bug report and feature request templates
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── pyproject.toml           # Package config, Ruff, Pytest
-├── Makefile                 # Dev shortcuts (make test, make lint, ...)
 ├── .editorconfig            # Editor settings
 ├── .pre-commit-config.yaml  # Pre-commit hooks (Ruff)
 ├── CHANGELOG.md             # Version history
@@ -443,21 +444,30 @@ ShortcutsPy/
 Already have a `.shortcut` file and want to see the code? The decompiler converts existing shortcuts into ShortcutsPy code:
 
 ```bash
-python shortcutspy/decompile.py my_shortcut.shortcut
+python -m shortcutspy.decompile my_shortcut.shortcut
+```
+
+After `pip install .`, the `shortcutspy-decompile` command is also available directly:
+
+```bash
+shortcutspy-decompile my_shortcut.shortcut
 ```
 
 ### Output as Python file
 
 ```bash
-python shortcutspy/decompile.py my_shortcut.shortcut -o editable.py
+python -m shortcutspy.decompile my_shortcut.shortcut -o editable.py
 ```
 
 ### Raw plist structure as JSON
 
 ```bash
-python shortcutspy/decompile.py my_shortcut.shortcut --json
+python -m shortcutspy.decompile my_shortcut.shortcut --json
 ```
 
+The decompiler derives its action mapping automatically from the library itself,
+so every action class ShortcutsPy knows is recognized — including correct
+constructor arguments. Unknown actions are preserved as `RawAction(...)`.
 The generated code can be edited directly and exported again as a `.shortcut` file.
 
 ---

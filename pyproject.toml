@@ -41,6 +41,9 @@ dev = [
   "ruff>=0.4",
 ]
 
+[project.scripts]
+shortcutspy-decompile = "shortcutspy.decompile:main"
+
 [tool.setuptools]
 include-package-data = true
 
