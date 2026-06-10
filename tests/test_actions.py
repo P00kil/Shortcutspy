@@ -1,6 +1,5 @@
 """Tests for Shortcut actions."""
 
-
 from shortcutspy import (
     Alert,
     Ask,

@@ -52,27 +52,6 @@ _META_PARAM_KEYS = {"UUID", "CustomOutputName", "GroupingIdentifier", "WFControl
 _PROBE_DENYLIST = {"IntentAppDefinition"}
 
 
-def _build_action_map() -> dict[str, tuple[str, dict[str, str]]]:
-    """Baut die ACTION_MAP dynamisch aus actions.py + manuellen Param-Maps."""
-    result: dict[str, tuple[str, dict[str, str]]] = {}
-    for name, cls in inspect.getmembers(_actions_module, inspect.isclass):
-        if not issubclass(cls, _actions_module.Action) or cls is _actions_module.Action:
-            continue
-        if name in ("RawAction", "AppIntentAction"):
-            continue
-        ident = getattr(cls, "identifier", "")
-        if not ident:
-            continue
-        result[ident] = (name, _PARAM_MAPS.get(ident, {}))
-    # Control-Flow-Marker einfügen
-    for ident, marker in _CONTROL_FLOW.items():
-        result[ident] = (marker, {})
-    return result
-
-
-ACTION_MAP: dict[str, tuple[str, dict[str, str]]] = _build_action_map()
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # ACTION_MAP automatisch aus actions.py ableiten
 #
@@ -112,7 +91,9 @@ def _ctor_params(cls: type) -> list[tuple[str, inspect.Parameter]]:
     ]
 
 
-def _probe_param_key(cls: type, params: list[tuple[str, inspect.Parameter]], target: str) -> str | None:
+def _probe_param_key(
+    cls: type, params: list[tuple[str, inspect.Parameter]], target: str
+) -> str | None:
     """Ermittelt, in welchen Plist-Key der Konstruktor das Argument `target` schreibt."""
     required = [n for n, p in params if p.default is inspect.Parameter.empty]
     base = {n: "x" for n in required}
@@ -129,8 +110,7 @@ def _probe_param_key(cls: type, params: list[tuple[str, inspect.Parameter]], tar
             except Exception:
                 baseline = {}
             candidates = [
-                k for k, v in probed.items()
-                if k not in baseline and _contains(v, sentinel)
+                k for k, v in probed.items() if k not in baseline and _contains(v, sentinel)
             ]
         else:
             candidates = [k for k, v in probed.items() if _contains(v, sentinel)]
@@ -166,6 +146,7 @@ ACTION_MAP: dict[str, tuple[str, dict[str, str]]] = _derive_action_map()
 # ─────────────────────────────────────────────────────────────────────────────
 # Werte aus dem Plist in Python-Ausdrücke übersetzen
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def resolve_value(val: Any, uuid_to_varname: dict[str, str]) -> str:
     """Wandelt einen Plist-Wert in einen gültigen Python-Ausdruck um."""
@@ -267,6 +248,7 @@ def _dictionary_literal(wfitems: Any, uuid_to_varname: dict[str, str]) -> str | 
 # Kern-Decompiler
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class Decompiler:
     def __init__(self, show_json: bool = False):
         self.show_json = show_json
@@ -307,19 +289,18 @@ class Decompiler:
         # Imports zusammenstellen (Variable/CurrentDate nur, wenn sie als
         # Aufruf im generierten Code vorkommen)
         type_imports = {
-            cls for cls in ("Variable", "CurrentDate")
+            cls
+            for cls in ("Variable", "CurrentDate")
             if any(re.search(rf"(?<![A-Za-z0-9_]){cls}\(", line) for line in self.lines)
         }
-        all_imports = sorted(self.imports_needed | type_imports)
-
-        import_lines = []
-        if all_imports:
-            import_lines.append("from shortcutspy import (")
-            for name in all_imports:
-                import_lines.append(f"    {name},")
-            import_lines.append(")")
-        else:
-            import_lines.append("from shortcutspy import Shortcut, install_shortcut")
+        all_imports = sorted(
+            self.imports_needed | type_imports | {"Shortcut", "install_shortcut"}
+        )
+        import_lines = [
+            "from shortcutspy import (",
+            *[f"    {name}," for name in all_imports],
+            ")",
+        ]
 
         safe_name = shortcut_name.replace('"', '\\"')
         output_lines = []
@@ -369,9 +350,13 @@ class Decompiler:
                     i += 1
                     continue
                 if identifier == IF_IDENTIFIER:
-                    then_actions, otherwise_actions, end_idx = self._collect_if_block(workflow_actions, i)
+                    then_actions, otherwise_actions, end_idx = self._collect_if_block(
+                        workflow_actions, i
+                    )
                     end_params = self._params_at(workflow_actions, end_idx)
-                    var_names.append(self._emit_if_block(params, then_actions, otherwise_actions, end_params))
+                    var_names.append(
+                        self._emit_if_block(params, then_actions, otherwise_actions, end_params)
+                    )
                 elif identifier == MENU_IDENTIFIER:
                     options, end_idx = self._collect_menu_block(workflow_actions, i)
                     end_params = self._params_at(workflow_actions, end_idx)
@@ -550,8 +535,9 @@ class Decompiler:
         self.lines.append(f"{var_name} = RawAction({args})")
         return var_name
 
-    def _emit_if_block(self, params: dict, then_actions: list, otherwise_actions: list,
-                       end_params: dict) -> str:
+    def _emit_if_block(
+        self, params: dict, then_actions: list, otherwise_actions: list, end_params: dict
+    ) -> str:
         input_str = resolve_value(params.get("WFInput"), self.uuid_to_varname)
         condition = params.get("WFCondition", 100)
         value_part = ""
@@ -564,7 +550,9 @@ class Decompiler:
 
         self.imports_needed.add("If")
         var_name = self._fresh_name("check")
-        self.lines.append(f"{var_name} = If({input_str}, condition={condition!r}{value_part}).then(")
+        self.lines.append(
+            f"{var_name} = If({input_str}, condition={condition!r}{value_part}).then("
+        )
         for v in then_vars:
             self.lines.append(f"    {v},")
         if else_vars:
@@ -576,8 +564,9 @@ class Decompiler:
         self._register_block_output(end_params, var_name)
         return var_name
 
-    def _emit_menu_block(self, params: dict, options: list[tuple[Any, list]],
-                         end_params: dict) -> str:
+    def _emit_menu_block(
+        self, params: dict, options: list[tuple[Any, list]], end_params: dict
+    ) -> str:
         resolved_options = [
             (resolve_value(title, self.uuid_to_varname), self._process_actions(option_actions))
             for title, option_actions in options
@@ -636,6 +625,7 @@ class Decompiler:
 # Hilfsroutinen
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def _short_repr(value: Any, limit: int = 120) -> str:
     text = repr(_plist_to_json(value))
     if len(text) > limit:
@@ -669,6 +659,7 @@ def _plist_to_json(obj: Any) -> Any:
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="ShortcutsPy Decompiler – .shortcut → Python",
@@ -695,6 +686,7 @@ def main() -> None:
     except Exception as e:
         print(f"Fehler beim Decompilieren: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

@@ -209,7 +209,9 @@ class GetMatchGroup(Action):
     identifier = "is.workflow.actions.text.match.getgroup"
     output_name = "Übereinstimmungsgruppe"
 
-    def __init__(self, matches: Any = None, group_index: int = 1, group_type: str = "Group At Index"):
+    def __init__(
+        self, matches: Any = None, group_index: int = 1, group_type: str = "Group At Index"
+    ):
         params: dict[str, Any] = {
             "WFGetGroupType": group_type,
             "WFGroupIndex": group_index,
@@ -569,7 +571,13 @@ class DownloadURL(Action):
     identifier = "is.workflow.actions.downloadurl"
     output_name = "Inhalt der URL"
 
-    def __init__(self, url: Any = None, method: str = "GET", headers: dict[str, Any] | None = None, body: Any = None):
+    def __init__(
+        self,
+        url: Any = None,
+        method: str = "GET",
+        headers: dict[str, Any] | None = None,
+        body: Any = None,
+    ):
         params: dict[str, Any] = {}
         if url is not None:
             params["WFURL"] = _resolve(url)
@@ -839,7 +847,9 @@ class CropImage(Action):
     identifier = "is.workflow.actions.image.crop"
     output_name = "Zugeschnittenes Bild"
 
-    def __init__(self, input: Any = None, x: int = 0, y: int = 0, width: int = 100, height: int = 100):
+    def __init__(
+        self, input: Any = None, x: int = 0, y: int = 0, width: int = 100, height: int = 100
+    ):
         params: dict[str, Any] = {
             "WFImageCropX": x,
             "WFImageCropY": y,
@@ -1265,7 +1275,12 @@ class Share(Action):
 class SendMessage(Action):
     identifier = "is.workflow.actions.sendmessage"
 
-    def __init__(self, content: Any = None, recipients: list[Any] | None = None, app: str = "com.apple.MobileSMS"):
+    def __init__(
+        self,
+        content: Any = None,
+        recipients: list[Any] | None = None,
+        app: str = "com.apple.MobileSMS",
+    ):
         params: dict[str, Any] = {
             "IntentAppDefinition": {
                 "BundleIdentifier": app,
@@ -1406,7 +1421,9 @@ class RunSSHScript(Action):
     identifier = "is.workflow.actions.runsshscript"
     output_name = "Shell-Skriptergebnis"
 
-    def __init__(self, script: str = "", host: str = "", port: int = 22, user: str = "", password: str = ""):
+    def __init__(
+        self, script: str = "", host: str = "", port: int = 22, user: str = "", password: str = ""
+    ):
         super().__init__(
             WFSSHScript=script,
             WFSSHHost=host,
@@ -1420,10 +1437,21 @@ class RunShellScript(Action):
     identifier = "is.workflow.actions.runshellscript"
     output_name = "Shell-Skriptergebnis"
 
-    def __init__(self, script: str = "", shell: str = "/bin/zsh", input: Any = None):
-        params: dict[str, Any] = {"WFShellScript": script, "WFShellScriptShell": shell}
+    def __init__(
+        self,
+        script: str = "",
+        shell: str = "/bin/zsh",
+        input: Any = None,
+        input_mode: str = "to stdin",
+        run_as_root: bool = False,
+    ):
+        params: dict[str, Any] = {"Script": _resolve_text(script), "Shell": shell}
         if input is not None:
-            params["WFInput"] = _resolve(input)
+            params["Input"] = _resolve(input)
+        if input_mode != "to stdin":
+            params["InputMode"] = input_mode
+        if run_as_root:
+            params["RunAsRoot"] = True
         super().__init__(**params)
 
 
@@ -1489,7 +1517,9 @@ class AddNewEvent(Action):
     identifier = "is.workflow.actions.addnewevent"
     output_name = "Neues Ereignis"
 
-    def __init__(self, title: Any = "", start_date: Any = None, end_date: Any = None, calendar: str = ""):
+    def __init__(
+        self, title: str = "", start_date: Any = None, end_date: Any = None, calendar: str = ""
+    ):
         params: dict[str, Any] = {}
         if title:
             params["WFCalendarItemTitle"] = _resolve_text(title)
@@ -1680,7 +1710,16 @@ class RawAction(Action):
 class AppIntentAction(Action):
     """Generic app intent action for third-party apps."""
 
-    def __init__(self, identifier: str, bundle_id: str, app_name: str, team_id: str, intent_id: str, output_name: str = "Ergebnis", **params: Any):
+    def __init__(
+        self,
+        identifier: str,
+        bundle_id: str,
+        app_name: str,
+        team_id: str,
+        intent_id: str,
+        output_name: str = "Ergebnis",
+        **params: Any,
+    ):
         self.identifier = identifier
         self.output_name = output_name
         params["AppIntentDescriptor"] = {
@@ -1718,4 +1757,6 @@ def _resolve_text(value: Any) -> Any:
     return value
 
 
-__all__ = [name for name, obj in globals().items() if isinstance(obj, type) and issubclass(obj, Action)]
+__all__ = [
+    name for name, obj in globals().items() if isinstance(obj, type) and issubclass(obj, Action)
+]

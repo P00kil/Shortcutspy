@@ -65,15 +65,17 @@ def build() -> Shortcut:
     suche_action = SearchWeb(suche_ask.output, engine="Google")
 
     # ── 4. Motivations-Zitat ─────────────────────────────────────
-    zitate = List(items=[
-        "Der beste Weg die Zukunft vorherzusagen ist, sie zu gestalten. – Peter Drucker",
-        "Es ist nicht wenig Zeit, die wir haben, sondern viel, die wir nicht nutzen. – Seneca",
-        "Erfolg ist nicht endgueltig, Misserfolg ist nicht fatal. Was zaehlt, ist der Mut weiterzumachen. – Churchill",
-        "Wer immer tut, was er schon kann, bleibt immer das, was er schon ist. – Henry Ford",
-        "Jeder Tag ist eine neue Chance, das zu tun, was du moechtest. – Friedrich Schiller",
-        "Handle, als waere es unmoeglich zu scheitern. – Dorothea Brande",
-        "Das Glueck deines Lebens haengt von der Beschaffenheit deiner Gedanken ab. – Marc Aurel",
-    ])
+    zitate = List(
+        items=[
+            "Der beste Weg die Zukunft vorherzusagen ist, sie zu gestalten. – Peter Drucker",
+            "Es ist nicht wenig Zeit, die wir haben, sondern viel, die wir nicht nutzen. – Seneca",
+            "Erfolg ist nicht endgueltig, Misserfolg ist nicht fatal. Was zaehlt, ist der Mut weiterzumachen. – Churchill",
+            "Wer immer tut, was er schon kann, bleibt immer das, was er schon ist. – Henry Ford",
+            "Jeder Tag ist eine neue Chance, das zu tun, was du moechtest. – Friedrich Schiller",
+            "Handle, als waere es unmoeglich zu scheitern. – Dorothea Brande",
+            "Das Glueck deines Lebens haengt von der Beschaffenheit deiner Gedanken ab. – Marc Aurel",
+        ]
+    )
     zitat_zufall = RandomNumber(minimum=1, maximum=7)
     zitat_pick = GetItemFromList(zitate.output, index=zitat_zufall.output)
     zitat_anzeige = Alert(
@@ -94,38 +96,45 @@ def build() -> Shortcut:
     info_anzeige = ShowResult(info_name.output)
 
     # ── Hauptmenue ───────────────────────────────────────────────
-    menu = Menu(prompt="🚀 Produktivitaets-Hub\nWas moechtest du tun?").option(
-        "📝 Schnellnotiz",
-        notiz_ask,
-        notiz_clip,
-        notiz_done,
-    ).option(
-        "⏱️ Countdown-Timer",
-        timer_ask,
-        timer_alert,
-        timer_delay,
-        timer_notification,
-    ).option(
-        "🔍 Web-Suche",
-        suche_ask,
-        suche_action,
-    ).option(
-        "💡 Motivations-Zitat",
-        zitate,
-        zitat_zufall,
-        zitat_pick,
-        zitat_anzeige,
-    ).option(
-        "📱 Geräte-Info",
-        info_name,
-        info_name_var,
-        info_modell,
-        info_modell_var,
-        info_batterie,
-        info_bat_var,
-        info_ip,
-        info_ip_var,
-        info_anzeige,
+    menu = (
+        Menu(prompt="🚀 Produktivitaets-Hub\nWas moechtest du tun?")
+        .option(
+            "📝 Schnellnotiz",
+            notiz_ask,
+            notiz_clip,
+            notiz_done,
+        )
+        .option(
+            "⏱️ Countdown-Timer",
+            timer_ask,
+            timer_alert,
+            timer_delay,
+            timer_notification,
+        )
+        .option(
+            "🔍 Web-Suche",
+            suche_ask,
+            suche_action,
+        )
+        .option(
+            "💡 Motivations-Zitat",
+            zitate,
+            zitat_zufall,
+            zitat_pick,
+            zitat_anzeige,
+        )
+        .option(
+            "📱 Geräte-Info",
+            info_name,
+            info_name_var,
+            info_modell,
+            info_modell_var,
+            info_batterie,
+            info_bat_var,
+            info_ip,
+            info_ip_var,
+            info_anzeige,
+        )
     )
 
     shortcut.add(
